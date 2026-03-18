@@ -50,3 +50,40 @@
     background: #ccc;
     cursor: nwse-resize;
 }
+
+.card {
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    color: white;
+}
+
+.blocking {
+    background-color: #e74c3c;
+}
+
+.warning {
+    background-color: #f39c12;
+}
+
+.card-header {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.summary {
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.valid {
+    color: #2ecc71;
+}
+
+.invalid {
+    color: #e74c3c;
+}
+
+.list {
+    overflow-y: auto;
+}

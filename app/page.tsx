@@ -113,7 +113,7 @@ const Home = () => {
 
 	const [isAttributesPanelVisible, setIsAttributesPanelVisible] = useState(true)
 
-	const [validationResult, setValidationResult] = useState<string>('')
+	const [validationResult, setValidationResult] = useState<any>(null)
 	const [showValidationTab, setShowValidationTab] = useState(false)
 
 	const [position, setPosition] = useState({ x: 150, y: 150 })
@@ -200,12 +200,12 @@ const Home = () => {
 						: 'Данные не валидны! Найдены ошибки в плане обучения.'
 				)
 
-				setValidationResult(JSON.stringify(data, null, 2))
+				setValidationResult(data)
 				setShowValidationTab(true)
 			})
 			.catch(error => {
 				showAlert(error)
-				setValidationResult(`Ошибка: ${error.message}`)
+				setValidationResult({ error: error.message })
 				setShowValidationTab(true)
 			})
 	}
