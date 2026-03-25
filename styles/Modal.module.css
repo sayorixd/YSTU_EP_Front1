@@ -21,7 +21,6 @@
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   animation: fadeInOut 5s ease-in-out;
-  z-index: 1000; /*это для отображения сообщений поверх блюра*/
 }
 
 @keyframes fadeInOut {

@@ -92,7 +92,7 @@ function generateWeekDateRanges(startDateStr: string): string[] {
     for (let i = 0; i < WEEK_COUNT; i++) {
       const weekStart = new Date(firstMonday.getTime() + i * 7 * DAY_MS);
       const weekEnd = new Date(firstMonday.getTime() + (i * 7 + 6) * DAY_MS);
-      weekRanges.push(`${formatDate(weekStart)} - ${formatDate(weekEnd)}`);
+      weekRanges.push(`${formatDate(weekStart)}-${formatDate(weekEnd)}`);
     }
   } else {
     // Будний день - начинаем с этого дня
@@ -104,7 +104,7 @@ function generateWeekDateRanges(startDateStr: string): string[] {
     
     console.log(`DEBUG: daysToNextSunday=${daysToNextSunday}, firstDay=${formatDate(firstDay)}, firstWeekEnd=${formatDate(firstWeekEnd)}`);
     
-    weekRanges.push(`${formatDate(firstDay)} - ${formatDate(firstWeekEnd)}`);
+    weekRanges.push(`${formatDate(firstDay)}-${formatDate(firstWeekEnd)}`);
     
     // Остальные 51 неделя - полные недели пн-вс
     const firstMonday = new Date(firstDay.getTime() + daysToNextSunday * DAY_MS);
@@ -112,7 +112,7 @@ function generateWeekDateRanges(startDateStr: string): string[] {
     for (let i = 0; i < WEEK_COUNT - 1; i++) {
       const weekStart = new Date(firstMonday.getTime() + i * 7 * DAY_MS);
       const weekEnd = new Date(firstMonday.getTime() + (i * 7 + 6) * DAY_MS);
-      weekRanges.push(`${formatDate(weekStart)} - ${formatDate(weekEnd)}`);
+      weekRanges.push(`${formatDate(weekStart)}-${formatDate(weekEnd)}`);
     }
   }
 
@@ -358,8 +358,8 @@ function calculateCourseStats(weeks: string[]) {
           </tr>
           <tr>
             {Array.from({ length: WEEK_COUNT }, (_, i) => (
-              <th key={i} title={weekDateRanges[i]} style={{ padding: '5px', writingMode: 'sideways-lr' }}>
-                <div style={{ whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.1', letterSpacing: '0.5px', fontSize: '12px' }}>
+              <th key={i} title={weekDateRanges[i]} style={{ fontSize: '9px', minWidth: '50px', padding: '2px' }}>
+                <div style={{ whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.1' }}>
                   {weekDateRanges[i]}
                 </div>
               </th>

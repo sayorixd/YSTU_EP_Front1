@@ -8,6 +8,8 @@ interface HeaderProps {
 	onNewOpenItemClick: () => void
 	onSaveItemClick: () => void
 	onExportExcelClick: () => void // <-- добавили
+	onToggleCompetenceMatrix: () => void
+	showCompetenceMatrix: boolean
 	directionInfo?: string
 }
 
@@ -15,10 +17,13 @@ export const Header = ({
 	onNewOpenItemClick,
 	onSaveItemClick,
 	onExportExcelClick, // <-- добавили
+	onToggleCompetenceMatrix,
+	showCompetenceMatrix,
 	directionInfo,
 }: HeaderProps) => {
 	const [showReferences, setShowReferences] = useState(false)
 	const [isFileMenuHovered, setIsFileMenuHovered] = useState(false)
+	const [isViewMenuHovered, setIsViewMenuHovered] = useState(false)
 
 	return (
 		<header className={header['header']}>
@@ -48,7 +53,21 @@ export const Header = ({
 						)}
 					</div>
 
-					<button>Вид</button>
+					<div
+						className={header['file-menu-container']}
+						onMouseEnter={() => setIsViewMenuHovered(true)}
+						onMouseLeave={() => setIsViewMenuHovered(false)}
+					>
+						<button>Вид</button>
+
+						{isViewMenuHovered && (
+							<div className={header['file-menu']}>
+								<button onClick={onToggleCompetenceMatrix}>
+									{showCompetenceMatrix ? 'Скрыть' : 'Показать'} матрицу компетенций
+								</button>
+							</div>
+						)}
+					</div>
 
 					<button onClick={() => setShowReferences(!showReferences)}>
 						Справочники
