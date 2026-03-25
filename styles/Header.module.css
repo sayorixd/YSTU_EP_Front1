@@ -97,13 +97,3 @@
   opacity: 1;
   visibility: visible;
 }
-.matrix-button {
-  background: #52c41a;
-  color: white;
-  transition: all 0.3s ease;
-}
-
-.matrix-button:hover {
-  background: #389e0d;
-  transform: translateY(-1px);
-}

@@ -1,4 +1,3 @@
-// app/page.tsx - обновленный
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
@@ -15,7 +14,7 @@ import { AttributesPanel } from '@/app/components/AttributesPanel'
 import { CoreModal } from '@/app/components/CoreModal'
 import { SaveMapModal } from '@/app/components/SaveMapModal'
 import { CalendarPlansTable } from '@/app/components/CalendarPlansTable'
-import { CompetenceMatrix } from '@/app/components/CompetenceMatrix'
+
 import { ErrorWindow } from '@/app/components/ErrorWindow'
 
 import { useDisciplines } from '@/app/hooks/useDisciplines'
@@ -32,7 +31,6 @@ import {
 	DirectionData,
 	EducationalLevel,
 	EducationalForm,
-	DisciplineBlock,
 } from '@/app/types'
 
 const Home = () => {
@@ -44,8 +42,6 @@ const Home = () => {
 	const [educationalForms, setEducationalForms] = useState<EducationalForm[]>(
 		[]
 	)
-	const [disciplineBlocks, setDisciplineBlocks] = useState<DisciplineBlock[]>([])
-	const [showCompetenceMatrix, setShowCompetenceMatrix] = useState(true)
 
 	const { showInitialModal, openInitialModal, closeInitialModal } =
 		useFileOperations()
@@ -69,12 +65,11 @@ const Home = () => {
 		selectedDiscipline,
 		setSelectedDiscipline,
 		handleAttributeChange,
-		loadDisciplines,
-		loadDisciplineBlocks,
 	} = useDisciplines(setRows)
 
 	const { alertMessage, showAlert, closeAlert } = useAlert()
 
+	// экспорт
 	const { downloadExcel, isDownloading: isExporting } =
 		useDownloadMap(showAlert)
 
@@ -105,20 +100,7 @@ const Home = () => {
 			if (formsRes.ok) setEducationalForms(await formsRes.json())
 		}
 		fetchReferences()
-		loadDisciplines()
-	}, [loadDisciplines])
-
-	useEffect(() => {
-		const fetchDisciplineBlocks = async () => {
-			if (currentDirection?.id) {
-				const blocks = await loadDisciplineBlocks(currentDirection.id)
-				setDisciplineBlocks(blocks)
-			} else {
-				setDisciplineBlocks([])
-			}
-		}
-		fetchDisciplineBlocks()
-	}, [currentDirection, loadDisciplineBlocks])
+	}, [])
 
 	const handleInitialModalClose = (data: {
 		directionData: DirectionData
@@ -293,9 +275,8 @@ const Home = () => {
 			<Header
 				onNewOpenItemClick={openInitialModal}
 				onSaveItemClick={handleSaveClick}
+				// ВАЖНО: новый проп для кнопки в Header
 				onExportExcelClick={() => downloadExcel(currentDirection)}
-				onToggleCompetenceMatrix={() => setShowCompetenceMatrix(!showCompetenceMatrix)}
-				showCompetenceMatrix={showCompetenceMatrix}
 				directionInfo={
 					currentDirection
 						? `${currentDirection.name}, ${currentDirection.level}, ${currentDirection.form}, ${currentDirection.semesters} сем.`
@@ -351,7 +332,7 @@ const Home = () => {
 							<div
 								style={{
 									marginTop: 24,
-									width: '100%',
+									width: 'max-content',
 									padding: 24,
 									background: '#ffffff',
 									boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
@@ -360,13 +341,6 @@ const Home = () => {
 							>
 								<CalendarPlansTable educationalPlanId={currentDirection.id} />
 							</div>
-						)}
-
-						{showCompetenceMatrix && currentDirection && disciplineBlocks.length > 0 && (
-							<CompetenceMatrix
-								disciplineBlocks={disciplineBlocks}
-								readOnly={false}
-							/>
 						)}
 					</main>
 				</div>
@@ -380,9 +354,8 @@ const Home = () => {
 				)}
 			</div>
 
-			<button onClick={() => console.log(rows)} style={{ display: 'none' }}>
-				кликкк
-			</button>
+			{/* можешь оставить для отладки */}
+			<button onClick={() => console.log(rows)}>кликкк</button>
 
 			{saveMapModal.isOpen && (
 				<SaveMapModal
