@@ -52,7 +52,7 @@
 }
 
 .matrix-table {
-  width: 100%;
+  /* width: 100%; */
   border-collapse: collapse;
   min-width: 600px;
 }
@@ -75,11 +75,16 @@
   white-space: nowrap;
 }
 
+.matrix-table-title {
+  min-width: 250px;
+  /* position: sticky; */
+}
+
 .discipline-cell {
   background: white;
   font-weight: 500;
   min-width: 200px;
-  position: sticky;
+  /* position: sticky; */
   left: 0;
   background: white;
   /* z-index: 5; */
@@ -87,7 +92,8 @@
 
 .competence-cell {
   text-align: center;
-  min-width: 80px;
+  min-width: 120px;
+  max-width: 20%;
 }
 
 .checkbox-label {

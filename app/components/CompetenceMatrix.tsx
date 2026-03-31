@@ -122,7 +122,7 @@ export const CompetenceMatrix: React.FC<CompetenceMatrixProps> = ({
         <table className="matrix-table">
           <thead>
             <tr>
-              <th style={{ minWidth: '250px' }}>Дисциплина / Компетенции</th>
+              <th className="matrix-table-title" >Дисциплина / Компетенции</th>
               {competences.map(comp => (
                 <th 
                   key={comp.id} 
