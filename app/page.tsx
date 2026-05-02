@@ -381,7 +381,7 @@ const Home = () => {
 				)}
 			</div>
 
-			<button onClick={() => console.log(showCompetenceMatrix, currentDirection, disciplineBlocks.length)} style={{ display: '' }}>
+			<button onClick={() => console.log(disciplines)} style={{ display: '' }}>
 				кликкк
 			</button>
 

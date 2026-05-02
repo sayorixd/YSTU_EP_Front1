@@ -225,6 +225,16 @@ export const AttributesPanel = ({
 				)}
 			</select>
 
+			<label>Курсовая работа</label>
+			<select
+				value={selectedDiscipline?.hasCourseWork ? 'Да' : 'Нет'}
+				onChange={e => handleAttributeChange('hasCourseWork', e.target.value === 'Да')}
+				disabled={!selectedDiscipline}
+			>
+				<option value='Нет'>Нет</option>
+				<option value='Да'>Да</option>
+			</select>
+
 			<label>Часы лекционные</label>
 			<input
 				type='number'
