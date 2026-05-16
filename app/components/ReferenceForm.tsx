@@ -13,7 +13,7 @@ interface ReferenceItem {
 interface ReferenceField {
 	key: string
 	label: string
-	type?: 'text' | 'select'
+	type?: 'text' | 'select' | 'checkbox'
 	reference?: string
 }
 
@@ -94,6 +94,7 @@ const REFERENCES_CONFIG: ReferenceConfig[] = [
 		fields: [
 			{ key: 'name', label: 'Название' },
 			{ key: 'short_name', label: 'Краткое название' },
+			{ key: 'is_actual', label: 'Актуальна', type: 'checkbox' },
 		],
 	},
 	{
@@ -200,7 +201,7 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 				} else {
 					// Для пустого справочника инициализируем пустую форму
 					const emptyForm = selectedReference.fields.reduce((acc, field) => {
-						acc[field.key] = ''
+						acc[field.key] = field.type === 'checkbox' ? false : ''
 						return acc
 					}, {} as Record<string, any>)
 
@@ -226,7 +227,7 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 			// Создаем новый элемент с пустыми значениями
 			const newItemData =
 				selectedReference?.fields.reduce((acc, field) => {
-					acc[field.key] = ''
+					acc[field.key] = field.type === 'checkbox' ? false : ''
 					return acc
 				}, {} as Record<string, any>) || {}
 
@@ -264,11 +265,12 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 
 	const handleInputChange = (
 		e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-		field: string
+		field: string,
+		fieldType?: string
 	) => {
 		setFormData({
 			...formData,
-			[field]: e.target.value,
+			[field]: fieldType === 'checkbox' ? (e as React.ChangeEvent<HTMLInputElement>).target.checked : e.target.value,
 		})
 	}
 
@@ -424,7 +426,7 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 				} else {
 					// Если список пустой, сбрасываем состояние
 					const emptyForm = selectedReference.fields.reduce((acc, field) => {
-						acc[field.key] = ''
+						acc[field.key] = field.type === 'checkbox' ? false : ''
 						return acc
 					}, {} as Record<string, any>)
 
@@ -540,6 +542,15 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 													</option>
 												))}
 											</select>
+										</div>
+									) : field.type === 'checkbox' ? (
+										<div className={styles['form-group']}>
+											<input
+												type='checkbox'
+												checked={!!formData[field.key]}
+												onChange={e => handleInputChange(e, field.key, field.type)}
+												disabled={isLoading}
+											/>
 										</div>
 									) : (
 										<input
