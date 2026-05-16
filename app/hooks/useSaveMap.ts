@@ -80,6 +80,7 @@ export const useSaveMap = () => {
 					practice_hours: discipline.practicalHours,
 					lab_hours: discipline.labHours,
 					semester_number: semesterIndex + 1,
+					has_course_work: discipline.hasCourseWork || false,
 					competencies: discipline.competenceCodes?.map(id => ({ id })) || [],
 				})
 			})

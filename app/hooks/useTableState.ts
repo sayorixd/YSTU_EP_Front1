@@ -41,7 +41,7 @@ export const useTableState = (initialColumns = 8) => {
             credits: block.credit_units,
             examType: block.control_type?.name?.charAt(0) || "", // "Э" для "Экзамен"
             examTypeId: block.control_type?.id || null,
-            hasCourseWork: false,
+            hasCourseWork: block.has_course_work || false,
             hasPracticalWork: block.practice_hours > 0,
             department_id: block.discipline.department.id,
             department: block.discipline.department.short_name,

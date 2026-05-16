@@ -164,7 +164,7 @@ export const useDisciplines = (setRows: (rows: any) => void) => {
 			}
 			return disc
 		})
-
+		console.log('Обновленные дисциплины:', updatedDisciplines)
 		setDisciplines(updatedDisciplines)
 		setSelectedDiscipline(prev => prev && { ...prev, [field]: value })
 
