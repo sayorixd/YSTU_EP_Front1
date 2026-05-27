@@ -57,7 +57,7 @@ const REFERENCES_CONFIG: ReferenceConfig[] = [
 		displayName: 'Дисциплины',
 		fields: [
 			{ key: 'name', label: 'Название', type: 'text' },
-			{ key: 'short_name', label: 'Короткое название', type: 'text' },
+			// { key: 'short_name', label: 'Короткое название', type: 'text' },
 			{
 				key: 'department_id',
 				label: 'Кафедра',
