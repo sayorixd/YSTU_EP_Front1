@@ -75,7 +75,7 @@ export const useSaveMap = () => {
 				blocks.push({
 					discipline_id: discipline.id,
 					credit_units: discipline.credits,
-					control_type_ids: discipline.controlTypeIds || [],
+					control_type_id: discipline.controlTypeIds?.[0] || null,
 					lecture_hours: discipline.lectureHours,
 					practice_hours: discipline.practicalHours,
 					lab_hours: discipline.labHours,
