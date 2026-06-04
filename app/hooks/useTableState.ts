@@ -39,13 +39,12 @@ export const useTableState = (initialColumns = 8) => {
             id: block.discipline.id,
             name: block.discipline.name,
             credits: block.credit_units,
-            controlTypeId: block.control_type_id ?? null,
-            examType:
-                block.control_types
-                    ?.map((t: any) => t.name.charAt(0))
-                    .join('/') || '',
-            examTypeId:
-                block.control_types?.[0]?.id || null,
+            controlTypeId: block.control_type?.id ?? null,
+            examType: block.control_type?.name
+                ? block.control_type.name.charAt(0)
+                : '',
+
+            examTypeId: block.control_type?.id ?? null,
             hasCourseProject: block.has_course_project || false,
             hasCourseWork: block.has_course_work || false,
             hasCourseRZ: block.has_rz || false,
