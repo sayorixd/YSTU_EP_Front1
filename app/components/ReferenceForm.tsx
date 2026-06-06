@@ -41,7 +41,7 @@ const REFERENCES_CONFIG: ReferenceConfig[] = [
 				key: 'competency_group_id',
 				label: 'Группа компетенций',
 				type: 'select',
-				reference: 'competency-group', // Указываем, что поле ссылается на справочник department
+				reference: 'competency-group',
 			},
 		],
 	},
@@ -113,7 +113,18 @@ const REFERENCES_CONFIG: ReferenceConfig[] = [
 		name: 'indicator',
 		path: '/indicators',
 		displayName: 'Индикаторы',
-		fields: [{ key: 'name', label: 'Название' }],
+		listField: 'code',
+		titleField: 'code',
+		fields: [
+			{ key: 'code', label: 'Код индикатора' },
+			{ key: 'name', label: 'Название' },
+			{
+				key: 'competency_id',
+				label: 'Компетенция',
+				type: 'select',
+				reference: 'competence',
+			},
+		],
 	},
 	{
 		name: 'educational-level',
@@ -128,6 +139,16 @@ const REFERENCES_CONFIG: ReferenceConfig[] = [
 		fields: [{ key: 'name', label: 'Название', type: 'text' }],
 	},
 ]
+
+const normalize = (value: string) => value.toLowerCase().trim()
+const getReferenceLabel = (item: ReferenceItem, referenceName?: string) => {
+	if (referenceName === 'competence' || referenceName === 'indicator') {
+		const code = item.code ?? ''
+		const name = item.name ?? ''
+		return `${code} / ${name}`.trim()
+	}
+	return item.name ?? ''
+}
 
 export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 	const [selectedReference, setSelectedReference] =
@@ -263,17 +284,31 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 		}
 	}
 
+	// const handleInputChange = (
+	// 	e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+	// 	field: string,
+	// 	fieldType?: string
+	// ) => {
+	// 	setFormData({
+	// 		...formData,
+	// 		[field]: fieldType === 'checkbox' ? (e as React.ChangeEvent<HTMLInputElement>).target.checked : e.target.value,
+	// 	})
+	// }
 	const handleInputChange = (
-		e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-		field: string,
-		fieldType?: string
+		e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+		key: string,
+		type?: 'text' | 'select' | 'checkbox'
 	) => {
-		setFormData({
-			...formData,
-			[field]: fieldType === 'checkbox' ? (e as React.ChangeEvent<HTMLInputElement>).target.checked : e.target.value,
-		})
-	}
+		const value =
+			type === 'checkbox'
+				? (e.target as HTMLInputElement).checked
+				: e.target.value
 
+		setFormData(prev => ({
+			...prev,
+			[key]: value,
+		}))
+	}
 	const handleReferenceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const refName = e.target.value
 		const ref = REFERENCES_CONFIG.find(r => r.name === refName)
@@ -445,7 +480,9 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 	}
 
 	const filteredItems = items.filter(item =>
-		item.name.toLowerCase().includes(searchTerm.toLowerCase())
+		normalize(getReferenceLabel(item, selectedReference?.name)).includes(
+			normalize(searchTerm)
+		)
 	)
 
 	return (
@@ -511,8 +548,9 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 											selectedItem?.id === item.id ? styles['selected'] : ''
 										}`}
 										onClick={() => handleItemClick(item)}
+										title={getReferenceLabel(item, selectedReference?.name)}
 									>
-										{item[selectedReference?.listField || 'name']}
+										{getReferenceLabel(item, selectedReference?.name)}
 									</div>
 								))}
 							</div>
@@ -521,7 +559,7 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 						<div className={styles['fields-container']}>
 							<h4>
 								{selectedItem
-									? `${selectedItem[selectedReference?.titleField || 'name']}`
+									? getReferenceLabel(selectedItem, selectedReference?.name)
 									: 'Новый элемент'}
 							</h4>
 
@@ -538,7 +576,7 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 												<option value=''>Выберите...</option>
 												{referenceData[field.reference]?.map(item => (
 													<option key={item.id} value={item.id}>
-														{item.name}
+														{getReferenceLabel(item, field.reference)}
 													</option>
 												))}
 											</select>
@@ -548,7 +586,7 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 											<input
 												type='checkbox'
 												checked={!!formData[field.key]}
-												onChange={e => handleInputChange(e, field.key, field.type)}
+												onChange={e => handleInputChange(e, field.key, 'checkbox')}
 												disabled={isLoading}
 											/>
 										</div>

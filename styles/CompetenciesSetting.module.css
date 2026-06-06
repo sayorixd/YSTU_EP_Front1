@@ -105,6 +105,7 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 14px;
+    white-space: normal;
 }
 
 .searchInput:focus,
@@ -113,17 +114,14 @@
     flex: 1;
     overflow-y: auto;
     min-height: 0;
+	overflow-wrap: anywhere;
 }
 
 .competenceItem {
-    padding: 10px 12px;
-    border-bottom: 1px solid #eee;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    font-size: 14px;
-    white-space: nowrap; /* Текст в одну строку */
-    overflow: hidden;
-    text-overflow: ellipsis; /* Многоточие если текст не помещается */
+	display: flex;
+	align-items: flex-start;
+	height: auto;
+	white-space: normal;
 }
 
 .competenceItem.selected {
@@ -143,11 +141,12 @@
     color: #555;
 }
 
+.competenceCode,
+.competenceName,
 .groupHeader {
-    padding: 10px 12px;
-    background-color: #d8dcfc;
-    font-weight: bold;
-    border-top: 1px solid #b7b7b7;
+	white-space: normal;
+	overflow-wrap: anywhere;
+	word-break: break-word;
 }
 
 .descriptionColumn {
@@ -159,6 +158,14 @@
     border-radius: 4px;
     overflow-y: auto;
     min-height: 0;
+	min-width: 0;
+}
+
+.descriptionText {
+	white-space: normal;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+	line-height: 1.5;
 }
 
 /* Стиль для описания в правой панели */
@@ -171,11 +178,8 @@
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
-}
-
-/* Убираем margin у параграфов в описании */
-.descriptionContent p {
     margin: 5px 0;
+    width: 100%;
 }
 
 .emptyState {

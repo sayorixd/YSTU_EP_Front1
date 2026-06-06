@@ -46,7 +46,6 @@ const Home = () => {
 	const [educationalForms, setEducationalForms] = useState<EducationalForm[]>(
 		[]
 	)
-	const [disciplineBlocks, setDisciplineBlocks] = useState<DisciplineBlock[]>([])
 	const [showCompetenceMatrix, setShowCompetenceMatrix] = useState(true)
 
 	const { showInitialModal, openInitialModal, closeInitialModal } =
@@ -71,7 +70,6 @@ const Home = () => {
 		selectedDiscipline,
 		setSelectedDiscipline,
 		handleAttributeChange,
-		loadDisciplineBlocks,
 	} = useDisciplines(setRows)
 
 	const { alertMessage, showAlert, closeAlert } = useAlert()
@@ -108,18 +106,6 @@ const Home = () => {
 		}
 		fetchReferences()
 	}, [])
-
-	useEffect(() => {
-		const fetchDisciplineBlocks = async () => {
-			if (currentDirection?.id) {
-				const blocks = await loadDisciplineBlocks(currentDirection.id)
-				setDisciplineBlocks(blocks)
-			} else {
-				setDisciplineBlocks([])
-			}
-		}
-		fetchDisciplineBlocks()
-	}, [currentDirection, loadDisciplineBlocks])
 
 	const handleInitialModalClose = (data: {
 		directionData: DirectionData
@@ -448,11 +434,8 @@ const Home = () => {
 							</div>
 						)}
 
-						{showCompetenceMatrix && currentDirection && disciplineBlocks.length >= 0 && (
-							<CompetenceMatrix
-								disciplineBlocks={disciplineBlocks}
-								readOnly={false}
-							/>
+						{showCompetenceMatrix && currentDirection && (
+							<CompetenceMatrix rows={rows} readOnly={false} />
 						)}
 					</main>
 				</div>

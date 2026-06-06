@@ -21,6 +21,29 @@ export const useSaveMap = () => {
 		setSuccess(null)
 
 		try {
+			const missingControlTypes: string[] = []
+
+			rows.forEach((row, rowIndex) => {
+				row.data.forEach((semesterDisciplines, semesterIndex) => {
+					semesterDisciplines.forEach((discipline: Discipline) => {
+						if (discipline.controlTypeId == null) {
+							missingControlTypes.push(
+								`Ядро «${row.name}», семестр ${semesterIndex + 1}, дисциплина «${discipline.name}»`
+							)
+						}
+					})
+				})
+			})
+
+			if (missingControlTypes.length > 0) {
+				const msg =
+					'Нельзя сохранить карту: для некоторых дисциплин не выбран вид контроля.\n' +
+					missingControlTypes.join('\n')
+
+				setError(msg)
+				return { ok: false, error: msg }
+			}
+
 			const mapCors = rows.map(row => ({
 				id: row.id || null,
 				name: row.name,
@@ -41,18 +64,17 @@ export const useSaveMap = () => {
 			)
 
 			if (!response.ok) {
-				const msg = `Ошибка сохранения: ${response.status} ${response.statusText}`
+				const errorBody = await response.text()
+				const msg = `Ошибка сохранения: ${response.status}\n${errorBody}`
 				setError(msg)
 				return { ok: false, error: msg }
 			}
 
-			// 204 No Content => тело ответа отсутствует, это успех
 			if (response.status === 204) {
 				setSuccess('Успешно сохранено')
 				return { ok: true }
 			}
 
-			// На всякий случай: если тело пустое, тоже не падаем на json()
 			const text = await response.text()
 			const data = text ? JSON.parse(text) : null
 

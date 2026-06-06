@@ -100,14 +100,17 @@ export const CompetenciesSetting = ({
 		selectedCompetenceIds.includes(comp.id)
 	)
 
+	const normalize = (value: string) => value.toLowerCase().trim()
+	const formatCompetence = (comp: Competence) => `${comp.code} / ${comp.name}`
 	const filteredCompetencies = allCompetencies.filter(comp => {
 		const matchesGroup = selectedGroup
 			? comp.competency_group_id === selectedGroup
 			: true
-		const matchesSearch =
-			comp.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			comp.name.toLowerCase().includes(searchTerm.toLowerCase())
-		return matchesGroup && matchesSearch
+
+		const query = normalize(searchTerm)
+		const combined = normalize(formatCompetence(comp))
+
+		return matchesGroup && combined.includes(query)
 	})
 
 	const isSelected = (competenceId: number) => {
@@ -212,15 +215,11 @@ export const CompetenciesSetting = ({
 										isSelected(comp.id) ? styles.selected : ''
 									}`}
 									onClick={e => handleCompetenceClick(comp, e)}
-									title={`${comp.code}: ${comp.name}`}
+									title={formatCompetence(comp)}
 								>
 									<div>
 										<p className={styles.competenceCode}>{comp.code}</p>
-										<p className={styles.competenceName}>
-											{comp.name.length > 22
-												? comp.name.substring(0, 22) + '...'
-												: comp.name}
-										</p>
+										<p className={styles.competenceName}>{comp.name}</p>
 									</div>
 								</div>
 							))}
@@ -278,8 +277,8 @@ export const CompetenciesSetting = ({
 									<p>
 										<strong>Группа компетенций:</strong> {currentGroupName}
 									</p>
-									<p>
-										<strong>Описание:</strong> {currentCompetence.name}
+									<p className={styles.descriptionText}>
+										<strong>Описание:</strong> {currentCompetence.description}
 									</p>
 								</>
 							) : (
