@@ -244,8 +244,14 @@ const handleStartDateChange = (e) =>
 
 const handleEndDateChange = (e) =>
 {
-  setEndDate(e.target.value);
-  setData({...data, end_date: e.target.value});
+  let endDate = e.target.value;
+  if (startDate > endDate)
+  {
+    alert('Дата окончания обучения не может быть раньше даты начала обучения');
+    return;
+  }
+  setEndDate(endDate);
+  setData({...data, end_date: endDate});
 }
 
 
