@@ -262,9 +262,11 @@ const Home = () => {
 				throw new Error('Направление не выбрано')
 			}
 
-			await saveMap(currentDirection, rows)
-			saveMapModal.closeModal()
-			showAlert(saveSuccess ?? 'Карта учебного плана успешно сохранена')
+			const saveMapResult = await saveMap(currentDirection, rows)
+			if (saveMapResult.ok) {
+				saveMapModal.closeModal()
+				showAlert(saveSuccess ?? 'Карта учебного плана успешно сохранена')
+			}
 		} catch (err) {
 			showAlert(err instanceof Error ? err.message : 'Ошибка сохранения')
 		}
