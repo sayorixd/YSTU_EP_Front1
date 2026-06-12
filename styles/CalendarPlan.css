@@ -15,7 +15,7 @@
 
 .calendar-plan__header {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 9fr 1fr;
   gap: 10px 16px;
   max-width: 700px;
   margin-bottom: 20px;
@@ -31,6 +31,18 @@
 
 .calendar-plan__header label {
   grid-column: span 2;
+  font-size: 14px;
+}
+
+.calendar-plan__header details {
+  font-size: 14px;
+}
+
+.calendar-plan__header details ul {
+  padding-inline-start: 21px;
+}
+
+.calendar-plan__header summary {
   font-size: 14px;
 }
 
