@@ -79,6 +79,29 @@
   border-left: 4px solid #d32f2f;
 }
 
+.messageScrollable {
+  line-height: 1;
+  max-height: 8em;
+  overflow-y: auto;
+  word-wrap: break-word;
+}
+
+.saveModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 400px;
+}
+
+.saveModalActionColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px;
+  
+  width: 200px; /*убрать, если нужно, чтобы кнопки занимали 100% ширины*/
+}
+
 .modeSelector {
   display: flex;
   gap: 20px;

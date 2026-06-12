@@ -26,7 +26,7 @@ export const useSaveMap = () => {
 			rows.forEach((row, rowIndex) => {
 				row.data.forEach((semesterDisciplines, semesterIndex) => {
 					semesterDisciplines.forEach((discipline: Discipline) => {
-						if (discipline.controlTypeId == null) {
+						if (discipline.controlTypeId == null || discipline.controlTypeId == 0) {
 							missingControlTypes.push(
 								`Ядро «${row.name}», семестр ${semesterIndex + 1}, дисциплина «${discipline.name}»`
 							)
