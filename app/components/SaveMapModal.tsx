@@ -38,10 +38,8 @@ export const SaveMapModal = ({
                     </button>
                 </div>
 
-                {error && <div className={modalContent.errorMessage}>{error}</div>}
-
-                <div className={modalContent.contentContainer}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', padding: '20px' }}>
+                <div className={`${modalContent.saveModalBody}`}>
+                    <div className={modalContent.saveModalActionColumn}>
                         <button
                             className={modalContent.addButton}
                             onClick={onSave}
@@ -57,6 +55,7 @@ export const SaveMapModal = ({
                             Инфо
                         </button>
                     </div>
+                    {error && <div className={`${modalContent.errorMessage} ${modalContent.messageScrollable}`}>{error}</div>}
                 </div>
             </div>
         </div>
