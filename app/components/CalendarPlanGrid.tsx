@@ -373,7 +373,7 @@ const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         </label>
       </div>
 
-      {/* ТАБЛИЦА - ОБЕРНУТА В DIV ДЛЯ ГОРИЗОНТАЛЬНОЙ ПРОКРУТКИ */}
+      {/* ТАБЛИЦА */}
       <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
         <table className="calendar-plan__table" style={{ minWidth: '1200px' }}>
           <thead>
