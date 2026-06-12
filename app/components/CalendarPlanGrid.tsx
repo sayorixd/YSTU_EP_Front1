@@ -373,7 +373,7 @@ const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         </label>
       </div>
 
-      {/* ТАБЛИЦА - ОБЕРНУТА В DIV ДЛЯ ГОРИЗОНТАЛЬНОЙ ПРОКРУТКИ */}
+      {/* ТАБЛИЦА */}
       <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
         <table className="calendar-plan__table" style={{ minWidth: '1200px' }}>
           <thead>
@@ -494,7 +494,16 @@ const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       </div>
 
       <div className="calendar-plan__actions">
-          <button onClick={() => exportCalendarPlan({ data })}>
+          <button 
+            onClick={() => {
+              if (!dateError) {
+                exportCalendarPlan({ data });
+              }
+            }}
+            style={dateError ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+            disabled={!!dateError}
+            title={dateError || "Экспорт в Excel"}
+          >
             Экспорт в Excel
           </button>
       </div>
