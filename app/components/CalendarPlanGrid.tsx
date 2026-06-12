@@ -283,6 +283,68 @@ const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   }
 }
 
+const onCellArrowKeyPress = (e: React.ChangeEvent<HTMLInputElement>, ci: number, wi: number) => {
+  e = e || window.event;
+
+  let d_ci = 0;
+  let d_wi = 0;
+  if (e.keyCode == 37)  // <- Left arrow key
+  {
+    d_wi = -1;
+  }
+  else if (e.keyCode == 38)  // ^ Up arrow key
+  {
+    d_ci = -1;
+  }
+  else if (e.keyCode == 39)  // -> Right arrow key
+  {
+    d_wi = 1;
+  }
+  else if (e.keyCode == 40)  // \/ Down arrow key
+  {
+    d_ci = 1;
+  }
+  else if (e.keyCode == 36 && e.ctrlKey)  // Ctrl + HOME
+  {
+    d_ci = -ci;
+    d_wi = -wi;
+  }
+  else if (e.keyCode == 35 && e.ctrlKey)  // Ctrl + END
+  {
+    d_ci = courses.length - 1 - ci;
+    d_wi = WEEK_COUNT - 1 - wi;
+  }
+  else if (e.keyCode == 36)  // HOME key
+  {
+    d_wi = -wi;
+  }
+  else if (e.keyCode == 35)  // END key
+  {
+    d_wi = WEEK_COUNT - 1 - wi;
+  }
+  else
+  {
+    return;
+  }
+
+  const mod = (x, y) => { return ((x % y) + y) % y; };
+
+  let new_ci = mod(ci + d_ci, courses.length);
+  let new_wi = mod(wi + d_wi, WEEK_COUNT);
+
+  const cell_move_to = document.getElementById(`calendar-plan-cell-course-${new_ci}-week-${new_wi}`);
+  setTimeout(function() { 
+    let length = 0;
+    if (cell_move_to.value)
+    {
+      length = cell_move_to.value.length;
+    }
+    cell_move_to.focus();
+    cell_move_to.selectionStart = 0;
+    cell_move_to.selectionEnd = length;
+  }, 0);
+}
+
   return (
     <div className="calendar-plan">
       <h3>Календарный учебный график</h3>
@@ -416,9 +478,11 @@ const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   <td>{c.course}</td>
                   {c.weeks.map((w, wi) => {
                     const isInvalidWeek = w && !isAllowedWeekCode(w);
+                    const cell_id = `calendar-plan-cell-course-${ci}-week-${wi}`;
                     return (
                       <td key={wi}>
                         <input
+                          id={cell_id}
                           className={`calendar-plan__week-input${
                             isInvalidWeek ? ' calendar-plan__week-input_invalid' : ''
                           }`}
@@ -427,6 +491,7 @@ const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                           onChange={(e) =>
                             updateWeek(ci, wi, e.target.value.toUpperCase())
                           }
+                          onKeyDown={(e) => { onCellArrowKeyPress(e, ci, wi); }}
                         />
                       </td>
                     );
