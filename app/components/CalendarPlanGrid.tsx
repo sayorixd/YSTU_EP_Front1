@@ -125,6 +125,11 @@ export function CalendarPlanGrid({ plan, onSave }: Props) {
   };
 
   const updateWeek = (ci: number, wi: number, v: string) => {
+    if (v == " ")
+    {
+      v = "";
+    }
+
     const next = courses.map((c, i) =>
       i === ci
         ? { ...c, weeks: c.weeks.map((w, j) => (j === wi ? v : w)) }
@@ -283,26 +288,56 @@ const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   }
 }
 
-const onCellArrowKeyPress = (e: React.ChangeEvent<HTMLInputElement>, ci: number, wi: number) => {
+const onCellFocus = (e: React.ChangeEvent<HTMLInputElement>) => {
+  let input_element = e.currentTarget;
+  setTimeout(function() { 
+    let length = 0;
+    if (input_element.value)
+    {
+      length = input_element.value.length;
+    }
+    input_element.selectionStart = 0;
+    input_element.selectionEnd = length;
+  }, 0);
+}
+
+const onCellKeyPress = (e: React.ChangeEvent<HTMLInputElement>, ci: number, wi: number) => {
   e = e || window.event;
 
   let d_ci = 0;
   let d_wi = 0;
-  if (e.keyCode == 37)  // <- Left arrow key
+  
+  if (e.keyCode == 37 && e.ctrlKey)  // Ctrl + Left
   {
-    d_wi = -1;
+    d_wi = Math.max(-10, -wi);
+  }
+  else if (e.keyCode == 38 && e.ctrlKey)  // Ctrl + Up
+  {
+    d_ci = -ci;
+  }
+  else if (e.keyCode == 39 && e.ctrlKey)  // Ctrl + Right
+  {
+    d_wi = Math.min(10, WEEK_COUNT - 1 - wi);
+  }
+  else if (e.keyCode == 40 && e.ctrlKey)  // Ctrl + Down
+  {
+    d_ci = courses.length - 1 - ci;
+  }
+  else if (e.keyCode == 37)  // <- Left arrow key
+  {
+    d_wi = Math.max(-1, -wi);
   }
   else if (e.keyCode == 38)  // ^ Up arrow key
   {
-    d_ci = -1;
+    d_ci = Math.max(-1, -ci);
   }
   else if (e.keyCode == 39)  // -> Right arrow key
   {
-    d_wi = 1;
+    d_wi = Math.min(1, WEEK_COUNT - 1 - wi);
   }
   else if (e.keyCode == 40)  // \/ Down arrow key
   {
-    d_ci = 1;
+    d_ci = Math.min(1, courses.length - 1 - ci);
   }
   else if (e.keyCode == 36 && e.ctrlKey)  // Ctrl + HOME
   {
@@ -333,16 +368,7 @@ const onCellArrowKeyPress = (e: React.ChangeEvent<HTMLInputElement>, ci: number,
   let new_wi = mod(wi + d_wi, WEEK_COUNT);
 
   const cell_move_to = document.getElementById(`calendar-plan-cell-course-${new_ci}-week-${new_wi}`);
-  setTimeout(function() { 
-    let length = 0;
-    if (cell_move_to.value)
-    {
-      length = cell_move_to.value.length;
-    }
-    cell_move_to.focus();
-    cell_move_to.selectionStart = 0;
-    cell_move_to.selectionEnd = length;
-  }, 0);
+  cell_move_to.focus();
 }
 
   return (
@@ -433,6 +459,18 @@ const onCellArrowKeyPress = (e: React.ChangeEvent<HTMLInputElement>, ci: number,
             ))}
           </select>
         </label>
+
+        <details>
+          <summary>Инструкции по управлению</summary>
+          <ul>
+            <li>Левая кнопка мыши по ячейке &ndash; редактировать ячейку</li>
+            <li>С, У, П, Д, Н, Г, =, Пробел и Backspace &ndash; ввод значения в ячейку</li>
+            <li>Стрелки (←, ↑, →, ↓) &ndash; переместиться влево, вверх, вправо, вниз</li>
+            <li>Ctrl+Стрелки (←, ↑, →, ↓) &ndash; переместиться на 10 ячеек влево, вверх, вправо, вниз</li>
+            <li>Home / End &ndash; переместиться в начало/конец строки</li>
+            <li>Ctrl+Home / Ctrl+End &ndash; переместиться в начальную/конечную ячейку таблицы</li>
+          </ul>
+        </details>
       </div>
 
       {/* ТАБЛИЦА */}
@@ -491,7 +529,8 @@ const onCellArrowKeyPress = (e: React.ChangeEvent<HTMLInputElement>, ci: number,
                           onChange={(e) =>
                             updateWeek(ci, wi, e.target.value.toUpperCase())
                           }
-                          onKeyDown={(e) => { onCellArrowKeyPress(e, ci, wi); }}
+                          onFocus={(e) => { onCellFocus(e); }}
+                          onKeyDown={(e) => { onCellKeyPress(e, ci, wi); }}
                         />
                       </td>
                     );
