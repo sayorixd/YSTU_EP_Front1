@@ -1,25 +1,14 @@
-// app/components/CalendarPlanGrid.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import {
-  WEEK_AUTUMN,
-  WEEK_SPRING,
-  WEEK_SUMMER, // <--- Добавили
-  WEEK_COUNT,
-  MAX_COURSES,
-  generateWeekDateRanges,
-  getAcademicStartDate,
-  getCourseEndDate,
-  calculateAcademicData
-} from '../common/CalendarPlanCommon';
+import { useState } from 'react';
+import { WEEK_AUTUMN, WEEK_SPRING, WEEK_COUNT, MAX_COURSES, generateWeekDateRanges } from '../common/CalendarPlanCommon';
 import { exportCalendarPlan } from '../hooks/exportCalendarPlan';
+import { importCalendarPlan } from '../hooks/importCalendarPlan';
+
 import '../../styles/CalendarPlan.css';
 
 type Course = {
   course: number;
-  start_date: string;
-  end_date: string;
   weeks: string[];
 };
 
@@ -40,7 +29,8 @@ type Props = {
 };
 
 const ALLOWED_WEEK_CODES = new Set(['', 'С', 'У', 'П', 'Д', 'Г', '=', 'Н']);
-const isAllowedWeekCode = (code: string) => ALLOWED_WEEK_CODES.has(String(code).toUpperCase());
+const isAllowedWeekCode = (code: string) =>
+  ALLOWED_WEEK_CODES.has(String(code).toUpperCase());
 
 function normalizePlanData(raw: any): PlanData {
   if (raw && Array.isArray(raw.courses)) {
@@ -54,21 +44,29 @@ function normalizePlanData(raw: any): PlanData {
       end_date: raw.end_date ?? '',
       courses: raw.courses.map((c: any, i: number) => ({
         course: c.course ?? i + 1,
-        start_date: c.start_date ?? '',
-        end_date: c.end_date ?? '',
-        weeks: Array.isArray(c.weeks) ? c.weeks : Array(WEEK_COUNT).fill(''),
+        weeks: Array.isArray(c.weeks)
+          ? c.weeks
+          : Array(WEEK_COUNT).fill(''),
       })),
     };
   }
+
   return {
-    title: '', academic_year: '', group: '', profile: '', reg_number: '',
-    start_date: '', end_date: '',
-    courses: [{ course: 1, start_date: '', end_date: '', weeks: Array(WEEK_COUNT).fill('') }],
+    title: '',
+    academic_year: '',
+    group: '',
+    profile: '',
+    reg_number: '',
+    start_date: '',
+    end_date: '',
+    courses: [{ course: 1, weeks: Array(WEEK_COUNT).fill('') }],
   };
 }
 
-const count = (weeks: string[], codes: string[]) => weeks.filter((w) => codes.includes(w)).length;
+const count = (weeks: string[], codes: string[]) =>
+  weeks.filter((w) => codes.includes(w)).length;
 
+// Функции валидации дат
 const validateDates = (startDate: string, endDate: string): boolean => {
   if (!startDate || !endDate) return true;
   return new Date(startDate) <= new Date(endDate);
@@ -83,39 +81,48 @@ const getDateErrorMessage = (startDate: string, endDate: string): string | null 
 };
 
 export function CalendarPlanGrid({ plan, onSave }: Props) {
-  const [data, setData] = useState<PlanData>(normalizePlanData(plan?.data));
-  const [startDate, setStartDate] = useState(data.start_date || '');
-  const [endDate, setEndDate] = useState(data.end_date || '');
-  const [dateError, setDateError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!startDate || !endDate) return;
-    const { courseCount } = calculateAcademicData(startDate, endDate);
-    const startYear = new Date(startDate).getFullYear();
-
-    const updatedCourses = Array.from({ length: courseCount }, (_, i) => {
-      const existing = data.courses[i];
-      const courseStart = getAcademicStartDate(startYear + i);
-      const courseEnd = getCourseEndDate(startYear + i + 1);
-      return {
-        course: i + 1,
-        start_date: existing?.start_date || courseStart,
-        end_date: existing?.end_date || courseEnd,
-        weeks: existing?.weeks ?? Array(WEEK_COUNT).fill(''),
-      };
-    });
-
-    const hasChanges = updatedCourses.some((c, i) =>
-      c.start_date !== data.courses[i].start_date || c.end_date !== data.courses[i].end_date
-    );
-    if (hasChanges) {
-      setData(prev => ({ ...prev, courses: updatedCourses }));
+  const [data, setData] = useState<PlanData>(
+    normalizePlanData(plan?.data)
+  );
+  const [startDate, setStartDate] = useState(() => {
+    if (data?.start_date) return data.start_date;
+    let year = data?.academic_year || new Date().getFullYear();
+    let default_date = `${year}-09-01`;
+    if (data)
+    {
+      data.start_date = default_date;
     }
-  }, [startDate, endDate]);
+    return default_date;
+  });
+  const [endDate, setEndDate] = useState(() => {
+    if (data?.end_date) return data.end_date;
+    const year = data?.academic_year || new Date().getFullYear();
+    const nextYear = parseInt(String(year), 10) + 1;
+    let default_date = `${nextYear}-08-31`;
+    if (data)
+    {
+      data.end_date = default_date;
+    }
+    return default_date;
+  });
+  
+  // State для ошибки дат
+  const [dateError, setDateError] = useState<string | null>(null);
+  
+  const weekDateRanges = generateWeekDateRanges(startDate, endDate);
 
-  const firstCourseStart = data.courses[0]?.start_date || startDate;
-  const weekDateRanges = generateWeekDateRanges(firstCourseStart);
-  const courses = data.courses;
+  const courses = Array.isArray(data.courses) ? data.courses : [];
+
+  const setCoursesCount = (n: number) => {
+    const next: Course[] = [];
+    for (let i = 1; i <= n; i++) {
+      next.push({
+        course: i,
+        weeks: courses[i - 1]?.weeks ?? Array(WEEK_COUNT).fill(''),
+      });
+    }
+    setData({ ...data, courses: next });
+  };
 
   const updateWeek = (ci: number, wi: number, v: string) => {
     if (v == " ")
@@ -124,54 +131,162 @@ export function CalendarPlanGrid({ plan, onSave }: Props) {
     }
 
     const next = courses.map((c, i) =>
-      i === ci ? { ...c, weeks: c.weeks.map((w, j) => (j === wi ? v : w)) } : c
+      i === ci
+        ? { ...c, weeks: c.weeks.map((w, j) => (j === wi ? v : w)) }
+        : c
     );
     setData({ ...data, courses: next });
   };
 
   const handleSave = () => {
+    // Валидация дат
     if (!validateDates(startDate, endDate)) {
       alert(getDateErrorMessage(startDate, endDate));
       return;
     }
-    if (!(data.title && data.academic_year && data.group && data.profile && data.reg_number && startDate && endDate)) {
-      alert('Заполните все обязательные поля в шапке');
+
+    if (!(data.title &&
+          data.academic_year &&
+          data.group &&
+          data.profile &&
+          data.reg_number &&
+          data.start_date &&
+          data.end_date))
+    {
+      alert('Заполните все обязательные поля');
       return;
     }
-    onSave({ ...data, start_date: startDate, end_date: endDate });
+
+    onSave(data);
   };
 
-  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let newStartDate = e.target.value;
-    if (newStartDate) {
-      const date = new Date(newStartDate);
-      const year = date.getFullYear();
-      const academicStart = getAcademicStartDate(year);
-      if (new Date(newStartDate) < new Date(academicStart)) {
-        newStartDate = academicStart;
-      }
-    }
-    setStartDate(newStartDate);
-    setData({ ...data, start_date: newStartDate });
+  const totals = (() => {
+  let tAutumn = 0;
+  let tSpring = 0;
+  let tTotal = 0;
+  let exams = 0;
+  let study = 0;
+  let other = 0;
+  let pre = 0;
+  let nir = 0;
+  let gia = 0;
+  let holidays = 0;
+  let total = 0;
 
-    if (endDate && !validateDates(newStartDate, endDate)) {
-      setDateError(getDateErrorMessage(newStartDate, endDate));
-    } else {
-      setDateError(null);
-    }
+  data.courses.forEach((course) => {
+    const weeks = course.weeks ?? Array(WEEK_COUNT).fill('');
+    const autumn = weeks.slice(0, 23);
+    const spring = weeks.slice(23);
+
+    const isTheory = (w: string) => w === '' || w === 'С';
+    const countWeeks = (v: string) => weeks.filter((w) => w === v).length;
+
+    const a = autumn.filter(isTheory).length;
+    const s = spring.filter(isTheory).length;
+    const th = a + s;
+
+    const ex = countWeeks('С');
+    const st = countWeeks('У');
+    const ot = countWeeks('П');
+    const pr = countWeeks('Д');
+    const n = countWeeks('Н');
+    const g = countWeeks('Г');
+    const h = countWeeks('=');
+
+    const sum =
+      th + st + ot + pr + n + g + h;
+
+    tAutumn += a;
+    tSpring += s;
+    tTotal += th;
+    exams += ex;
+    study += st;
+    other += ot;
+    pre += pr;
+    nir += n;
+    gia += g;
+    holidays += h;
+    total += sum;
+  });
+
+  return {
+    tAutumn,
+    tSpring,
+    tTotal,
+    exams,
+    study,
+    other,
+    pre,
+    nir,
+    gia,
+    holidays,
+    total,
   };
+})();
 
-  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newEndDate = e.target.value;
-    setEndDate(newEndDate);
-    setData({ ...data, end_date: newEndDate });
+function calculateCourseStats(weeks: string[]) {
+  const autumn = weeks.slice(0, 23);
+  const spring = weeks.slice(23);
 
-    if (startDate && !validateDates(startDate, newEndDate)) {
-      setDateError(getDateErrorMessage(startDate, newEndDate));
-    } else {
-      setDateError(null);
-    }
+  const isTheory = (w: string) => w === '' || w === 'С';
+  const countWeeks = (v: string) => weeks.filter((w) => w === v).length;
+
+  const theoryAutumn = autumn.filter(isTheory).length;
+  const theorySpring = spring.filter(isTheory).length;
+  const theoryTotal = theoryAutumn + theorySpring;
+
+  const exams = countWeeks('С');
+  const study = countWeeks('У');
+  const other = countWeeks('П');
+  const pre = countWeeks('Д');
+  const nir = countWeeks('Н');
+  const gia = countWeeks('Г');
+  const holidays = countWeeks('=');
+
+  const total =
+    theoryTotal + study + other + pre + nir + gia + holidays;
+
+  return {
+    theoryAutumn,
+    theorySpring,
+    theoryTotal,
+    exams,
+    study,
+    other,
+    pre,
+    nir,
+    gia,
+    holidays,
+    total,
   };
+}
+
+// Обработчики изменения дат с валидацией
+const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const newStartDate = e.target.value;
+  setStartDate(newStartDate);
+  setData({...data, start_date: newStartDate});
+  
+  // Проверяем валидацию
+  if (endDate && !validateDates(newStartDate, endDate)) {
+    setDateError(getDateErrorMessage(newStartDate, endDate));
+  } else {
+    setDateError(null);
+  }
+}
+
+const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const newEndDate = e.target.value;
+  setEndDate(newEndDate);
+  setData({...data, end_date: newEndDate});
+  
+  // Проверяем валидацию
+  if (startDate && !validateDates(startDate, newEndDate)) {
+    setDateError(getDateErrorMessage(startDate, newEndDate));
+  } else {
+    setDateError(null);
+  }
+}
 
 const onCellFocus = (e: React.ChangeEvent<HTMLInputElement>) => {
   let input_element = e.currentTarget;
@@ -259,29 +374,90 @@ const onCellKeyPress = (e: React.ChangeEvent<HTMLInputElement>, ci: number, wi: 
   return (
     <div className="calendar-plan">
       <h3>Календарный учебный график</h3>
-      
+
       {/* ШАПКА */}
       <div className="calendar-plan__header">
-        <label>Название: <input placeholder="Название" value={data.title} onChange={(e) => setData({ ...data, title: e.target.value })} /></label>
-        <label>Учебный год: <input placeholder="Учебный год" value={data.academic_year} onChange={(e) => setData({ ...data, academic_year: e.target.value })} /></label>
-        <label>Группа: <input placeholder="Группа" value={data.group} onChange={(e) => setData({ ...data, group: e.target.value })} /></label>
-        <label>Профиль: <input placeholder="Профиль" value={data.profile} onChange={(e) => setData({ ...data, profile: e.target.value })} /></label>
-        <label>Рег. номер: <input placeholder="Рег. номер" value={data.reg_number} onChange={(e) => setData({ ...data, reg_number: e.target.value })} /></label>
         <label>
-          Дата начала обучения (общая):
-          <input type="date" value={startDate} onChange={handleStartDateChange} />
+          Название:
+          <input placeholder="Название" value={data.title}
+          onChange={(e) => setData({ ...data, title: e.target.value })} />
         </label>
         <label>
-          Дата окончания обучения (общая):
-          <input type="date" value={endDate} onChange={handleEndDateChange} />
+          Учебный год:
+        <input 
+          placeholder="Учебный год" 
+          value={data.academic_year}
+          onChange={(e) => {
+            setData({ ...data, academic_year: e.target.value });
+            if (e.target.value) {
+              setStartDate(`${e.target.value}-09-01`);
+            }
+          }} 
+        />
         </label>
+        <label>
+          Группа:
+        <input placeholder="Группа" value={data.group}
+          onChange={(e) => setData({ ...data, group: e.target.value })} />
+        </label>
+        <label>
+          Профиль:
+        <input placeholder="Профиль" value={data.profile}
+          onChange={(e) => setData({ ...data, profile: e.target.value })} />
+        </label>
+        <label>
+          Рег. номер:
+        <input placeholder="Рег. номер" value={data.reg_number}
+          onChange={(e) => setData({ ...data, reg_number: e.target.value })} />
+        </label>
+
+        <label>
+          Дата начала обучения:
+          <input 
+            type="date" 
+            value={startDate}
+            onChange={handleStartDateChange}
+          />
+          <small style={{ display: 'block', marginTop: '4px', color: '#666', fontSize: '12px' }}>
+            (Если выходной день - начнётся с ближайшего понедельника)
+          </small>
+        </label>
+
+        <label>
+          Дата окончания обучения:
+          <input 
+            type="date" 
+            value={endDate}
+            onChange={handleEndDateChange}
+          />
+          <small style={{ display: 'block', marginTop: '4px', color: '#666', fontSize: '12px' }}>
+            (Если выходной день - обучение закончится в пятницу)
+          </small>
+        </label>
+
+        {/* Отображение ошибки дат */}
         {dateError && (
-          <div style={{ color: '#dc3545', fontSize: '14px', marginTop: '8px', padding: '8px', backgroundColor: '#f8d7da', borderRadius: '4px', gridColumn: 'span 2' }}>
+          <div style={{ 
+            color: '#dc3545', 
+            fontSize: '14px', 
+            marginTop: '8px',
+            padding: '8px',
+            backgroundColor: '#f8d7da',
+            borderRadius: '4px',
+            width: '100%'
+          }}>
             ⚠️ {dateError}
           </div>
         )}
-        <label style={{ gridColumn: 'span 2' }}>
-          Количество курсов (рассчитано автоматически): {courses.length}
+
+        <label>
+          Количество курсов:
+          <select value={courses.length}
+            onChange={(e) => setCoursesCount(+e.target.value)}>
+            {Array.from({ length: MAX_COURSES }, (_, i) => (
+              <option key={i + 1}>{i + 1}</option>
+            ))}
+          </select>
         </label>
 
         <details>
@@ -299,15 +475,26 @@ const onCellKeyPress = (e: React.ChangeEvent<HTMLInputElement>, ci: number, wi: 
 
       {/* ТАБЛИЦА */}
       <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
-        <table className="calendar-plan__table" style={{ minWidth: '1400px' }}>
+        <table className="calendar-plan__table" style={{ minWidth: '1200px' }}>
           <thead>
             <tr>
-              <th rowSpan={2} style={{ minWidth: '140px' }}>Курс</th><th colSpan={WEEK_AUTUMN}>Осенний семестр</th><th colSpan={WEEK_SPRING}>Весенний семестр</th><th colSpan={WEEK_SUMMER}>Летний период</th><th colSpan={3}>Теория</th><th rowSpan={2}>Экз.</th><th rowSpan={2}>Уч.</th><th rowSpan={2}>Друг.</th><th rowSpan={2}>Предд.</th><th rowSpan={2}>НИР</th><th rowSpan={2}>ГИА</th><th rowSpan={2}>Каник.</th><th rowSpan={2}>Всего</th>
+              <th rowSpan={2}>Курс</th>
+              <th colSpan={WEEK_AUTUMN}>Осенний семестр</th>
+              <th colSpan={WEEK_SPRING}>Весенний семестр</th>
+              <th colSpan={3}>Теория</th>
+              <th rowSpan={2}>Экз.</th>
+              <th rowSpan={2}>Уч.</th>
+              <th rowSpan={2}>Друг.</th>
+              <th rowSpan={2}>Предд.</th>
+              <th rowSpan={2}>НИР</th>
+              <th rowSpan={2}>ГИА</th>
+              <th rowSpan={2}>Каник.</th>
+              <th rowSpan={2}>Всего</th>
             </tr>
             <tr>
               {Array.from({ length: WEEK_COUNT }, (_, i) => (
-                <th key={i} title={weekDateRanges[i]} style={{ padding: '5px', writingMode: 'sideways-lr', textOrientation: 'mixed' }}>
-                  <div style={{ whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.1', letterSpacing: '0.5px', fontSize: '11px' }}>
+                <th key={i} title={weekDateRanges[i]} style={{ padding: '5px', writingMode: 'sideways-lr' }}>
+                  <div style={{ whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.1', letterSpacing: '0.5px', fontSize: '12px' }}>
                     {weekDateRanges[i]}
                   </div>
                 </th>
@@ -315,31 +502,18 @@ const onCellKeyPress = (e: React.ChangeEvent<HTMLInputElement>, ci: number, wi: 
               <th>О</th><th>В</th><th>Σ</th>
             </tr>
           </thead>
+
           <tbody>
             {courses.map((c, ci) => {
               const autumn = c.weeks.slice(0, WEEK_AUTUMN);
-              const spring = c.weeks.slice(WEEK_AUTUMN, WEEK_AUTUMN + WEEK_SPRING); 
-              
+              const spring = c.weeks.slice(WEEK_AUTUMN);
+
               const theoryO = count(autumn, ['', 'С']);
               const theoryV = count(spring, ['', 'С']);
-              
-              const exams = count(c.weeks, ['С']);
-              const study = count(c.weeks, ['У']);
-              const other = count(c.weeks, ['П']);
-              const pre = count(c.weeks, ['Д']);
-              const nir = count(c.weeks, ['Н']);
-              const gia = count(c.weeks, ['Г']);
-              const holidays = count(c.weeks, ['=']);
-              const total = theoryO + theoryV + exams + study + other + pre + nir + gia + holidays;
 
               return (
                 <tr key={c.course}>
-                  <td style={{ verticalAlign: 'middle', padding: '8px' }}>
-                    <div style={{ fontWeight: 'bold', fontSize: '14px' }}>Курс {c.course}</div>
-                    <div style={{ fontSize: '11px', color: '#666', marginTop: '4px', whiteSpace: 'normal' }}>
-                      {c.start_date} –<br />{c.end_date}
-                    </div>
-                  </td>
+                  <td>{c.course}</td>
                   {c.weeks.map((w, wi) => {
                     const isInvalidWeek = w && !isAllowedWeekCode(w);
                     const cell_id = `calendar-plan-cell-course-${ci}-week-${wi}`;
@@ -357,11 +531,6 @@ const onCellKeyPress = (e: React.ChangeEvent<HTMLInputElement>, ci: number, wi: 
                           }
                           onFocus={(e) => { onCellFocus(e); }}
                           onKeyDown={(e) => { onCellKeyPress(e, ci, wi); }}
-                          className={`calendar-plan__week-input${isInvalidWeek ? ' calendar-plan__week-input_invalid' : ''}`}
-                          value={w}
-                          maxLength={1}
-                          style={{ writingMode: 'horizontal-tb', textOrientation: 'mixed' }}
-                          onChange={(e) => updateWeek(ci, wi, e.target.value.toUpperCase())}
                         />
                       </td>
                     );
@@ -369,38 +538,93 @@ const onCellKeyPress = (e: React.ChangeEvent<HTMLInputElement>, ci: number, wi: 
                   <td className="calendar-plan__summary">{theoryO}</td>
                   <td className="calendar-plan__summary">{theoryV}</td>
                   <td className="calendar-plan__summary">{theoryO + theoryV}</td>
-                  <td>{exams}</td>
-                  <td>{study}</td>
-                  <td>{other}</td>
-                  <td>{pre}</td>
-                  <td>{nir}</td>
-                  <td>{gia}</td>
-                  <td>{holidays}</td>
-                  <td className="calendar-plan__summary">{total}</td>
+                  <td>{count(c.weeks, ['С'])}</td>
+                  <td>{count(c.weeks, ['У'])}</td>
+                  <td>{count(c.weeks, ['П'])}</td>
+                  <td>{count(c.weeks, ['Д'])}</td>
+                  <td>{count(c.weeks, ['Н'])}</td>
+                  <td>{count(c.weeks, ['Г'])}</td>
+                  <td>{count(c.weeks, ['='])}</td>
+                  <td className="calendar-plan__summary">{WEEK_COUNT}</td>
                 </tr>
               );
             })}
+
+             <tr style={{ fontWeight: 'bold', background: '#f3f3f3' }}>
+                <td>Итого</td>
+
+                {/* пропускаем 52 недели */}
+                {Array.from({ length: WEEK_COUNT }).map((_, i) => (
+                  <td key={i}></td>
+                ))}
+
+                <td>{totals.tAutumn}</td>
+                <td>{totals.tSpring}</td>
+                <td>{totals.tTotal}</td>
+                <td>{totals.exams}</td>
+                <td>{totals.study}</td>
+                <td>{totals.other}</td>
+                <td>{totals.pre}</td>
+                <td>{totals.nir}</td>
+                <td>{totals.gia}</td>
+                <td>{totals.holidays}</td>
+                <td>{totals.total}</td>
+                </tr>
+
           </tbody>
         </table>
       </div>
 
-      {/* ЛЕГЕНДА и КНОПКИ */}
+      {/* ЛЕГЕНДА */}
       <div className="calendar-plan__legend">
-        <div>С — теоретическое обучение (вкл. сессию) | У — учебная практика | П — другие практики | Д — преддипломная практика</div>
-        <div>Н — НИР | Г — ГИА | = — каникулы | (пусто) — теоретическое обучение</div>
+        <div>С — экзаменационная сессия</div>
+        <div>У — учебная практика</div>
+        <div>П — другие практики</div>
+        <div>Д — преддипломная практика</div>
+        <div>Н — НИР</div>
+        <div>Г — ГИА</div>
+        <div>= — каникулы</div>
+        <div>(пусто) — теоретическое обучение</div>
       </div>
+
       <div className="calendar-plan__actions">
-        <button onClick={handleSave} style={dateError ? { opacity: 0.5, cursor: 'not-allowed' } : {}} disabled={!!dateError}>
-          Сохранить календарный план
-        </button>
-        <button
-          onClick={() => !dateError && exportCalendarPlan({ data: { ...data, start_date: startDate, end_date: endDate } })}
+        <button 
+          onClick={handleSave}
           style={dateError ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           disabled={!!dateError}
-          title={dateError || "Экспорт в Excel"}
         >
-          Экспорт в Excel
+          Сохранить календарный план
         </button>
+      </div>
+
+      <div className="calendar-plan__actions">
+          <button 
+            onClick={() => {
+              if (!dateError) {
+                exportCalendarPlan({ data });
+              }
+            }}
+            style={dateError ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+            disabled={!!dateError}
+            title={dateError || "Экспорт в Excel"}
+          >
+            Экспорт в Excel
+          </button>
+      </div>
+
+      <div className="calendar-plan__actions">
+          <input
+              type="file"
+              accept=".xlsx"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+
+                importCalendarPlan(file, (importedData) => {
+                  setData(importedData);
+                });
+              }}
+            />
       </div>
     </div>
   );
