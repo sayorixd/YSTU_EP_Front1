@@ -427,17 +427,18 @@ const Home = () => {
 						{currentDirection && (
 							<div
 								style={{
-									marginTop: 24,
-									width: '100%',
-									padding: 24,
-									background: '#ffffff',
-									boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-									overflowX: 'auto',
+								marginTop: 24,
+								width: '100%',
+								padding: 24,
+								background: '#ffffff',
+								boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+								overflowX: 'auto',
 								}}
 							>
 								<CalendarPlansTable
-									educationalPlanId={currentDirection.id}
-									onBeforeCreate={checkNonActualDepartments}
+								educationalPlanId={currentDirection.id}
+								semesters={currentDirection.semesters}
+								onBeforeCreate={checkNonActualDepartments}
 								/>
 							</div>
 						)}
