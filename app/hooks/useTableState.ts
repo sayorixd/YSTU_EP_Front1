@@ -45,14 +45,7 @@ export const useTableState = (initialColumns = 8) => {
                 : '',
 
             examTypeId: block.control_type?.id ?? null,
-            hasCourseProject: block.has_course_project || false,
-            hasCourseWork: block.has_course_work || false,
-            hasCourseRZ: block.has_rz || false,
-            hasCourseRGR: block.has_rgr || false,
-            hasCourseReferat: block.has__referat || false,
-            hasRZ: block.has_rz || false,
-            hasRGR: block.has_rgr || false,
-            hasReferat: block.has_referat || block.has__referat || false,
+            secondaryControlTypeIds: block.secondary_control_type_ids || [],
             hasPracticalWork: block.practice_hours > 0,
             department_id: block.discipline.department.id,
             department: block.discipline.department.short_name,
@@ -160,30 +153,23 @@ export const useTableState = (initialColumns = 8) => {
       if (semesterIndex >= 0 && semesterIndex < columns) {
         newRow.data[semesterIndex].push({
           block_id: block.id,
-          table_id: generateUniqueId(), // Временный ID, можно заменить на реальный
+          table_id: generateUniqueId(), 
           id: block.discipline.id,
           name: block.discipline.name,
           credits: block.credit_units,
-          controlTypeId: block.control_type_id ?? null,
-          examType:
-              block.control_types
-                ?.map((t: any) => t.name.charAt(0))
-                .join('/') || '',
-          examTypeId:
-              block.control_types?.[0]?.id || null,
-          hasCourseProject: false,
-          hasCourseWork: false, // Можно добавить в API
-          hasCourseRZ: false,
-          hasCourseRGR: false,
-          hasCourseReferat: false,
-          hasRZ: false,
-          hasRGR: false,
-          hasReferat: false,
+          
+          controlTypeId: block.control_type?.id ?? null,
+          examType: block.control_type?.name ? block.control_type.name.charAt(0) : '',
+          examTypeId: block.control_type?.id ?? null,
+          secondaryControlTypeIds: block.secondary_control_type_ids || [],
+          
           hasPracticalWork: block.practice_hours > 0,
           department_id: block.discipline.department.id,
           department: block.discipline.department.short_name,
           department_name: block.discipline.department.name,
-          competenceCodes: block.competencies.map((c: any) => c.id),
+          
+          competenceCodes: block.competencies?.map((c: any) => c.id) || [], 
+          
           lectureHours: block.lecture_hours,
           labHours: block.lab_hours,
           practicalHours: block.practice_hours,

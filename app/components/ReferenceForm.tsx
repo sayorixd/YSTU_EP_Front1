@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import { TemplateString } from '@/app/common/TemplateString'
 import styles from '@/styles/ReferenceForm.module.css'
 
 interface ReferenceItem {
@@ -17,19 +18,36 @@ interface ReferenceField {
 	reference?: string
 }
 
+
+interface Context {
+	[key: string]: (context: any, referenceContext: any) => any
+}
+
+interface ContextField {
+	key: string
+	defaultValueKey: string
+}
+
 interface ReferenceConfig {
+	context?: Context
 	name: string
 	path: string
+	pathGetAll?: string
 	displayName: string
 	listField?: string
 	titleField?: string
 	fields: ReferenceField[]
+	contextFields?: ContextField[]
 }
 
 const REFERENCES_CONFIG: ReferenceConfig[] = [
 	{
+		context: {
+			"directionId": (context, referenceContext) => { return context.currentDirectionId; }
+		},
 		name: 'competence',
-		path: '/competencies',
+		path: "/competencies",
+		pathGetAll: '/direction/{{directionId}}',
 		displayName: 'Компетенции',
 		listField: 'code',
 		titleField: 'code',
@@ -42,14 +60,23 @@ const REFERENCES_CONFIG: ReferenceConfig[] = [
 				label: 'Группа компетенций',
 				type: 'select',
 				reference: 'competency-group',
-			},
+			}
 		],
+		contextFields: [
+			{
+				key: 'direction_id',
+				defaultValueKey: "directionId"
+			}
+		]
 	},
 	{
 		name: 'competency-group',
 		path: '/competency-groups',
 		displayName: 'Группы компетенций',
-		fields: [{ key: 'name', label: 'Название' }],
+		fields: [
+			{ key: 'name', label: 'Полное название' },
+			{ key: 'short_name', label: 'Сокращённое название' },
+		],
 	},
 	{
 		name: 'discipline',
@@ -72,6 +99,8 @@ const REFERENCES_CONFIG: ReferenceConfig[] = [
 		displayName: 'Направления подготовки',
 		fields: [
 			{ key: 'name', label: 'Название', type: 'text' },
+			{ key: 'code', label: 'Код', type: 'text' },
+			{ key: 'profile', label: 'Профиль', type: 'text' },
 			{
 				key: 'educational_level_id',
 				label: 'Уровень образования',
@@ -107,7 +136,10 @@ const REFERENCES_CONFIG: ReferenceConfig[] = [
 		name: 'control-type',
 		path: '/control-types',
 		displayName: 'Виды контроля',
-		fields: [{ key: 'name', label: 'Название' }],
+		fields: [
+			{ key: 'name', label: 'Название' },
+			{ key: 'is_primary', label: 'Основной', type: 'checkbox' }
+		],
 	},
 	{
 		name: 'indicator',
@@ -130,7 +162,10 @@ const REFERENCES_CONFIG: ReferenceConfig[] = [
 		name: 'educational-level',
 		path: '/educational-levels',
 		displayName: 'Уровни образования',
-		fields: [{ key: 'name', label: 'Название', type: 'text' }],
+		fields: [
+			{ key: 'name', label: 'Название', type: 'text' },
+			{ key: 'name_in_genetive', label: 'Название в родительном падеже', type: 'text' },
+		],
 	},
 	{
 		name: 'educational-form',
@@ -147,10 +182,21 @@ const getReferenceLabel = (item: ReferenceItem, referenceName?: string) => {
 		const name = item.name ?? ''
 		return `${code} / ${name}`.trim()
 	}
+	else if (referenceName === 'competency-group') {
+		const name = item.name ?? ''
+		const short_name = item.short_name ?? ''
+		return `${name} (${short_name})`
+	}
 	return item.name ?? ''
 }
 
-export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
+export const ReferenceForm = ({ currentDirectionId, onClose }: { currentDirectionId: number, onClose: () => void }) => {
+	const [context, setContext] = useState(
+		{
+			"currentDirectionId": currentDirectionId
+		}
+	);
+	const referenceContext = useRef(null);
 	const [selectedReference, setSelectedReference] =
 		useState<ReferenceConfig | null>(null)
 	const [items, setItems] = useState<ReferenceItem[]>([])
@@ -164,12 +210,38 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 		Record<string, ReferenceItem[]>
 	>({})
 
+	const calculateReferenceContext = (referenceConfig: ReferenceConfig) => {
+		if (!referenceConfig.context) return null;
+
+		let newReferenceContext: any = {};
+		for (let key of Object.keys(referenceConfig.context as object))
+		{
+			newReferenceContext[key] = referenceConfig.context[key](context, newReferenceContext);
+		}
+		
+		return newReferenceContext;
+	}
+
 	const fetchReferenceData = async (referenceName: string) => {
 		const refConfig = REFERENCES_CONFIG.find(r => r.name === referenceName)
 		if (!refConfig) return
 
+		let path = refConfig.path;
+		let context;
+		if (refConfig.context)
+		{
+			context = calculateReferenceContext(refConfig);
+			path = new TemplateString(refConfig.path).format(context)
+			if (refConfig.pathGetAll)
+			{
+				path += new TemplateString(refConfig.pathGetAll).format(context);
+			}
+		}
+		
+		let url = `http://localhost:8001${path}/`;
+
 		try {
-			const response = await fetch(`http://localhost:8001${refConfig.path}/`)
+			const response = await fetch(url)
 			if (!response.ok)
 				throw new Error(`Ошибка загрузки: ${response.statusText}`)
 			const data = await response.json()
@@ -183,6 +255,118 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 		}
 	}
 
+	// Инициализация пустой формы
+	const initializeEmptyForm = async () => {
+		// Создаем новый элемент с пустыми значениями
+		let newItemData =
+			selectedReference?.fields.reduce((acc, field) => {
+				acc[field.key] = field.type === 'checkbox' ? false : ''
+				return acc
+			}, {} as Record<string, any>) || {}
+		
+		if (selectedReference.context && selectedReference.contextFields)
+		{
+			console.log(selectedReference);
+			console.log(referenceContext.current);
+			for (let contextField of selectedReference.contextFields)
+			{
+				newItemData[contextField.key] = referenceContext.current[contextField.defaultValueKey];
+			}
+		}
+
+		setSelectedItem(null)
+		setFormData(newItemData)
+	}
+
+	const updateSelectedReferenceList = async () => {
+		setIsLoading(true)
+		setError(null)
+		try {
+			let path = selectedReference.path;
+			
+			if (selectedReference.context)
+			{
+				let context = calculateReferenceContext(selectedReference);
+				referenceContext.current = context;
+				
+				path = new TemplateString(selectedReference.path).format(context)
+				if (selectedReference.pathGetAll)
+				{
+					path += new TemplateString(selectedReference.pathGetAll).format(context);
+				}
+			}
+			let url = `http://localhost:8001${path}/`;
+				
+			const response = await fetch(url)
+			if (!response.ok)
+				throw new Error(`Ошибка загрузки: ${response.statusText}`)
+			const data = await response.json()
+
+			setItems(data)
+		} catch (err) {
+			console.error(`Error fetching ${selectedReference.name}:`, err)
+			setError(
+				`Ошибка загрузки: ${err instanceof Error ? err.message : String(err)}`
+			)
+		} finally {
+			setIsLoading(false)
+		}
+
+	}
+
+	const updateSelectedReferenceListAndForm = async (selectedItemIndex: number = 0) => {
+		setIsLoading(true)
+		setError(null)
+		try {
+			let path = selectedReference.path;
+			
+			if (selectedReference.context)
+			{
+				let context = calculateReferenceContext(selectedReference);
+				referenceContext.current = context;
+				
+				path = new TemplateString(selectedReference.path).format(context)
+				if (selectedReference.pathGetAll)
+				{
+					path += new TemplateString(selectedReference.pathGetAll).format(context);
+				}
+			}
+			let url = `http://localhost:8001${path}/`;
+				
+			const response = await fetch(url)
+			if (!response.ok)
+				throw new Error(`Ошибка загрузки: ${response.statusText}`)
+			const data = await response.json()
+
+			setItems(data)
+
+			if (data.length > 0) {
+				// Загружаем полные данные первого элемента
+				const itemResponse = await fetch(
+					`http://localhost:8001${selectedReference.path}/${data[selectedItemIndex].id}/`
+				)
+				if (!itemResponse.ok)
+					throw new Error(
+						`Ошибка загрузки элемента: ${itemResponse.statusText}`
+					)
+				const itemData = await itemResponse.json()
+
+				setSelectedItem(itemData)
+				setFormData(itemData)
+			} else {
+				// Для пустого справочника инициализируем пустую форму
+				initializeEmptyForm();
+			}
+		} catch (err) {
+			console.error(`Error fetching ${selectedReference.name}:`, err)
+			setError(
+				`Ошибка загрузки: ${err instanceof Error ? err.message : String(err)}`
+			)
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
 	// Загрузка данных при выборе справочника
 	useEffect(() => {
 		if (!selectedReference) return
@@ -193,67 +377,13 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 			}
 		})
 
-		const fetchData = async () => {
-			setIsLoading(true)
-			setError(null)
-			try {
-				const response = await fetch(
-					`http://localhost:8001${selectedReference.path}/`
-				)
-				if (!response.ok)
-					throw new Error(`Ошибка загрузки: ${response.statusText}`)
-				const data = await response.json()
-
-				setItems(data)
-
-				if (data.length > 0) {
-					// Загружаем полные данные первого элемента
-					const itemResponse = await fetch(
-						`http://localhost:8001${selectedReference.path}/${data[0].id}/`
-					)
-					if (!itemResponse.ok)
-						throw new Error(
-							`Ошибка загрузки элемента: ${itemResponse.statusText}`
-						)
-					const itemData = await itemResponse.json()
-
-					setSelectedItem(itemData)
-					setFormData(itemData)
-				} else {
-					// Для пустого справочника инициализируем пустую форму
-					const emptyForm = selectedReference.fields.reduce((acc, field) => {
-						acc[field.key] = field.type === 'checkbox' ? false : ''
-						return acc
-					}, {} as Record<string, any>)
-
-					setSelectedItem(null)
-					setFormData(emptyForm)
-				}
-			} catch (err) {
-				console.error(`Error fetching ${selectedReference.name}:`, err)
-				setError(
-					`Ошибка загрузки: ${err instanceof Error ? err.message : String(err)}`
-				)
-			} finally {
-				setIsLoading(false)
-			}
-		}
-
-		fetchData()
+		updateSelectedReferenceListAndForm()
 	}, [selectedReference])
 
 	// Обработчик выбора элемента или создания нового
 	const handleItemClick = async (item: ReferenceItem | 'add') => {
 		if (item === 'add') {
-			// Создаем новый элемент с пустыми значениями
-			const newItemData =
-				selectedReference?.fields.reduce((acc, field) => {
-					acc[field.key] = field.type === 'checkbox' ? false : ''
-					return acc
-				}, {} as Record<string, any>) || {}
-
-			setSelectedItem(null)
-			setFormData(newItemData)
+			initializeEmptyForm();
 			return
 		}
 
@@ -312,11 +442,20 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 	const handleReferenceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const refName = e.target.value
 		const ref = REFERENCES_CONFIG.find(r => r.name === refName)
-		setSelectedReference(ref || null)
+		
+		setSelectedReference(null)
 		setItems([])
 		setSelectedItem(null)
 		setFormData({})
 		setSearchTerm('')
+
+		if (!currentDirectionId && ref.context?.directionId)
+		{
+			setError(`Для редактирования справочника \"${ref.displayName}\" откройте учебный план`)
+			return;
+		}
+
+		setSelectedReference(ref)
 	}
 
 	const handleSave = async () => {
@@ -394,13 +533,7 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 				)
 			} else {
 				// После создания нового элемента обновляем список
-				const listResponse = await fetch(
-					`http://localhost:8001${selectedReference.path}/`
-				)
-				if (listResponse.ok) {
-					const updatedList = await listResponse.json()
-					setItems(updatedList)
-				}
+				updateSelectedReferenceList();
 			}
 
 			setSelectedItem(savedItem)
@@ -441,34 +574,7 @@ export const ReferenceForm = ({ onClose }: { onClose: () => void }) => {
 			}
 
 			// Обновляем список
-			const listResponse = await fetch(
-				`http://localhost:8001${selectedReference.path}/`
-			)
-			if (listResponse.ok) {
-				const updatedList = await listResponse.json()
-				setItems(updatedList)
-
-				if (updatedList.length > 0) {
-					// Выбираем первый элемент из обновленного списка
-					const itemResponse = await fetch(
-						`http://localhost:8001${selectedReference.path}/${updatedList[0].id}/`
-					)
-					if (itemResponse.ok) {
-						const itemData = await itemResponse.json()
-						setSelectedItem(itemData)
-						setFormData(itemData)
-					}
-				} else {
-					// Если список пустой, сбрасываем состояние
-					const emptyForm = selectedReference.fields.reduce((acc, field) => {
-						acc[field.key] = field.type === 'checkbox' ? false : ''
-						return acc
-					}, {} as Record<string, any>)
-
-					setSelectedItem(null)
-					setFormData(emptyForm)
-				}
-			}
+			updateSelectedReferenceListAndForm()
 		} catch (err) {
 			console.error('Error deleting reference:', err)
 			setError(

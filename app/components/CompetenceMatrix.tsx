@@ -3,8 +3,10 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Competence, Discipline, TableRow } from '@/app/types'
 import { useCompetences } from '@/app/hooks/useCompetences'
+import { useDownloadCompetenceMatrix } from '@/app/hooks/useCompetenceMatrix'
 
 import '@/styles/CompetenceMatrix.css'
+import { useDownloadIndicatorsTable } from '../hooks/useIndicatorsTable'
 
 type MatrixGroup = {
 	key: string
@@ -14,6 +16,7 @@ type MatrixGroup = {
 }
 
 interface CompetenceMatrixProps {
+	educationalPlanId: number
 	rows: TableRow[]
 	readOnly?: boolean
 	onCompetencesChange?: (blockId: number, competenceIds: number[]) => void
@@ -22,12 +25,13 @@ interface CompetenceMatrixProps {
 const normalize = (value: string) => value.toLowerCase().trim()
 
 export const CompetenceMatrix: React.FC<CompetenceMatrixProps> = ({
+	educationalPlanId,
 	rows,
 	readOnly = false,
 	onCompetencesChange,
 }) => {
 	const { competences, getCompetencesForBlock, updateBlockCompetences } =
-		useCompetences()
+		useCompetences(educationalPlanId)
 
 	const [groupCompetences, setGroupCompetences] = useState<
 		Record<string, number[]>
@@ -141,6 +145,9 @@ export const CompetenceMatrix: React.FC<CompetenceMatrixProps> = ({
 		group.name.toLowerCase().includes(filterText.toLowerCase())
 	)
 
+	const { downloadExcel, isDownloading } =
+		  useDownloadCompetenceMatrix(educationalPlanId, (x) => {});
+
 	if (loading) {
 		return (
 			<div style={{ padding: '48px', textAlign: 'center', color: '#8c8c8c' }}>
@@ -167,7 +174,7 @@ export const CompetenceMatrix: React.FC<CompetenceMatrixProps> = ({
 
 	return (
 		<div className="competence-matrix">
-			<div className="matrix-header">
+			<div className="header">
 				<span className="matrix-title">📊 Матрица компетенций</span>
 				<input
 					type="text"
@@ -178,12 +185,11 @@ export const CompetenceMatrix: React.FC<CompetenceMatrixProps> = ({
 				/>
 			</div>
 
-			<div className="matrix-stats">
-				Всего дисциплин: {filteredGroups.length} из {matrixGroups.length} |
-				Всего компетенций: {competences.length}
-			</div>
-
 			<div className="matrix-table-container">
+				<div className="matrix-stats">
+					Всего дисциплин: {filteredGroups.length} из {matrixGroups.length} |
+					Всего компетенций: {competences.length}
+				</div>
 				<table className="matrix-table">
 					<thead>
 						<tr>
@@ -262,6 +268,16 @@ export const CompetenceMatrix: React.FC<CompetenceMatrixProps> = ({
 						)}
 					</tbody>
 				</table>
+			</div>
+
+			<div className="competence-matrix__actions">
+				<button onClick={() => {
+                	        downloadExcel(educationalPlanId);
+                		}}
+                        title={"Экспорт в Excel"}
+                >
+          			Экспорт в Excel
+        		</button>
 			</div>
 		</div>
 	)

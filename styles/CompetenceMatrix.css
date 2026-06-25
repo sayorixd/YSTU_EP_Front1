@@ -1,4 +1,5 @@
 .competence-matrix {
+  padding: 20px;
   background: white;
   /* border-radius: 8px; */
   /* box-shadow: 0 2px 8px rgba(0,0,0,0.1); */
@@ -6,14 +7,15 @@
   margin-top: 24px;
 }
 
-.matrix-header {
-  padding: 16px 24px;
-  border-bottom: 1px solid #e8e8e8;
+.competence-matrix > *:nth-last-child(n + 2) {
+  margin-bottom: 16px;
+}
+
+.header {
+  width: 100%;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
+  justify-content: space-between;
 }
 
 .matrix-title {
@@ -23,7 +25,7 @@
 }
 
 .matrix-filter {
-  padding: 8px 12px;
+  padding: 6px;
   border: 1px solid #d9d9d9;
   border-radius: 4px;
   width: 250px;
@@ -40,9 +42,9 @@
 .matrix-stats {
   font-size: 12px;
   color: #8c8c8c;
-  padding: 8px 24px;
+  padding: 8px 12px;
   background: #fafafa;
-  border-bottom: 1px solid #e8e8e8;
+  border: 1px solid #e8e8e8;
 }
 
 .matrix-table-container {
@@ -136,6 +138,20 @@
   font-size: 12px;
   color: #8c8c8c;
   margin-top: 4px;
+}
+
+.competence-matrix__actions button {
+  padding: 8px 14px;
+  font-size: 14px;
+  background: #2f6fed;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.competence-matrix__actions button:hover {
+  background: #2458c7;
 }
 
 @media (max-width: 768px) {

@@ -4,8 +4,8 @@ import { Competence } from '@/app/types'
 const API_BASE_URL = 'http://localhost:8001'
 
 export const competenciesApi = {
-  async getAll(): Promise<Competence[]> {
-    const response = await fetch(`${API_BASE_URL}/competencies/`)
+  async getAll(directionId: number): Promise<Competence[]> {
+    const response = await fetch(`${API_BASE_URL}/competencies/direction/${directionId}`)
     if (!response.ok) throw new Error('Ошибка загрузки компетенций')
     return response.json()
   },

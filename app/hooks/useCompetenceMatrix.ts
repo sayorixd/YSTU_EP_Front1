@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react'
 import { DirectionData } from '@/app/types'
 
-type ShowAlert = (message: string) => void
+type ShowAlert1 = (message: string) => void
 
-export const useDownloadIndicatorsTable = (educationalPlanId: number, showAlert: ShowAlert) => {
+export const useDownloadCompetenceMatrix = (educationalPlanId: number, showAlert: ShowAlert1) => {
     const [isDownloading, setIsDownloading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -19,7 +19,7 @@ export const useDownloadIndicatorsTable = (educationalPlanId: number, showAlert:
 
             try {
                 const res = await fetch(
-                    `http://localhost:8001/directions/${educationalPlanId}/indicators_table/export/excel`
+                    `http://localhost:8001/directions/${educationalPlanId}/competencies_matrix/export/excel`
                 )
 
                 if (!res.ok) {

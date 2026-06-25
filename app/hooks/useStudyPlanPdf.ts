@@ -74,9 +74,9 @@ const columns = [
 	{ key: 'rz', label: 'РЗ', width: 48, group: 'Формы контроля' },
 	{ key: 'rgr', label: 'РГР', width: 50, group: 'Формы контроля' },
 	{ key: 'referat', label: 'Реф.', width: 56, group: 'Формы контроля' },
-	{ key: 'lectureHours', label: 'Лекции', width: 72, group: 'Часы аудиторной работы' },
-	{ key: 'practicalHours', label: 'Практические', width: 92, group: 'Часы аудиторной работы' },
-	{ key: 'labHours', label: 'Лабораторные', width: 92, group: 'Часы аудиторной работы' },
+	{ key: 'lectureHours', label: 'Лекции', width: 54, group: 'Часы аудиторной работы' },
+	{ key: 'practicalHours', label: 'Практические', width: 100, group: 'Часы аудиторной работы' },
+	{ key: 'labHours', label: 'Лабораторные', width: 102, group: 'Часы аудиторной работы' },
 	{ key: 'auditoriumHours', label: 'Всего ауд.', width: 82, group: 'Часы аудиторной работы' },
 ] as const
 

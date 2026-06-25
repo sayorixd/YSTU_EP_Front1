@@ -4,15 +4,15 @@ import { Competence } from '@/app/types'
 import { competenciesApi } from '@/app/api/competencies'
 import { disciplineBlockCompetenciesApi } from '@/app/api/disciplineBlockCompetencies'
 
-export const useCompetences = () => {
+export const useCompetences = (directionId: number) => {
   const [competences, setCompetences] = useState<Competence[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const loadCompetences = useCallback(async () => {
+  const loadCompetences = useCallback(async (directionId: number) => {
     setIsLoading(true)
     try {
-      const data = await competenciesApi.getAll()
+      const data = await competenciesApi.getAll(directionId)
       setCompetences(data)
       setError(null)
     } catch (err) {
@@ -59,7 +59,7 @@ export const useCompetences = () => {
   }, [])
 
   useEffect(() => {
-    loadCompetences()
+    loadCompetences(directionId)
   }, [loadCompetences])
 
   return {

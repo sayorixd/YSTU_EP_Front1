@@ -12,7 +12,7 @@ interface HeaderProps {
 	onToggleCompetenceMatrix: () => void
 	showCompetenceMatrix: boolean
 	directionInfo?: string
-	onExportIndicatorsTableExcelClick: () => void
+	currentDirectionId: number
 }
 
 export const Header = ({
@@ -23,7 +23,7 @@ export const Header = ({
 	onToggleCompetenceMatrix,
 	showCompetenceMatrix,
 	directionInfo,
-	onExportIndicatorsTableExcelClick: onExportIndicatorsTableExcelClick
+	currentDirectionId
 }: HeaderProps) => {
 	const [showReferences, setShowReferences] = useState(false)
 	const [isFileMenuHovered, setIsFileMenuHovered] = useState(false)
@@ -77,25 +77,14 @@ export const Header = ({
 					<button onClick={() => setShowReferences(!showReferences)}>
 						Справочники
 					</button>
-
-					<div
-						className={header['file-menu-container']}
-						onMouseEnter={() => setIsFileMenuHovered(true)}
-						onMouseLeave={() => setIsFileMenuHovered(false)}
-					>
-						<button>Индикаторы</button>
-
-						{isFileMenuHovered && (
-							<div className={header['file-menu']}>
-								<button onClick={onExportIndicatorsTableExcelClick}>Экспорт в Excel</button>
-							</div>
-						)}
-					</div>
 				</div>
 			</div>
 
 			{showReferences && (
-				<ReferenceForm onClose={() => setShowReferences(false)} />
+				<ReferenceForm
+					currentDirectionId={currentDirectionId}
+					onClose={() => setShowReferences(false)}
+				/>
 			)}
 		</header>
 	)

@@ -16,6 +16,7 @@ import { CoreModal } from '@/app/components/CoreModal'
 import { SaveMapModal } from '@/app/components/SaveMapModal'
 import { CalendarPlansTable } from '@/app/components/CalendarPlansTable'
 import { CompetenceMatrix } from '@/app/components/CompetenceMatrix'
+import { IndicatorsTable } from './components/IndicatorsTable'
 import { ErrorWindow } from '@/app/components/ErrorWindow'
 
 import { useDisciplines } from '@/app/hooks/useDisciplines'
@@ -28,7 +29,6 @@ import { useFileOperations } from '@/app/hooks/useFileOperations'
 import { useSaveMap } from '@/app/hooks/useSaveMap'
 import { useDownloadMap } from '@/app/hooks/useDownloadMap'
 import { useStudyPlanPdf } from '@/app/hooks/useStudyPlanPdf'
-import { useDownloadIndicatorsTable } from '@/app/hooks/useIndicatorsTable'
 import {
 	Discipline,
 	DirectionData,
@@ -79,9 +79,7 @@ const Home = () => {
 		useDownloadMap(showAlert)
 	const { downloadPdf: downloadEducationalPlanPdf, isGeneratingPdf } = useStudyPlanPdf(showAlert)
 
-	const { downloadExcel: downloadIndicatorsTableExcel,
-		    isDownloading: isIndicatorsTableExcelDownloading } =
-			useDownloadIndicatorsTable(showAlert);
+	
 
 	const { handleDragStart, handleDrop } = useDragAndDrop(
 		rows,
@@ -219,22 +217,27 @@ const Home = () => {
 			},
 			body: JSON.stringify(rows),
 		})
-			.then(response => response.json())
-			.then(data => {
-				showAlert(
-					data.isValid
-						? 'Данные валидны! Ошибок не найдено'
-						: 'Данные не валидны! Найдены ошибки в плане обучения.'
-				)
-
-				setValidationResult(data)
-				setShowValidationTab(true)
+		.then(response => response.json())
+		.then(data => {
+			showAlert(
+				data.isValid
+					? 'Данные валидны! Ошибок не найдено'
+					: 'Данные не валидны! Найдены ошибки в плане обучения.'
+			)
+			setValidationResult(data)
+			setShowValidationTab(true)
+		})
+		.catch(error => {
+			// ИСПРАВЛЕНО: Безопасно извлекаем строку из объекта Error
+			const errorMsg = error instanceof Error ? error.message : 'Произошла неизвестная ошибка при проверке'
+			
+			showAlert(errorMsg)
+			setValidationResult({ 
+				isValid: false, 
+				results: [{ message: errorMsg, severity: 'blocking', details: {} }] 
 			})
-			.catch(error => {
-				showAlert(error)
-				setValidationResult({ error: error.message })
-				setShowValidationTab(true)
-			})
+			setShowValidationTab(true)
+		})
 	}
 
 	useEffect(() => {
@@ -376,7 +379,7 @@ const Home = () => {
 						? `${currentDirection.name}, ${currentDirection.level}, ${currentDirection.form}, ${currentDirection.semesters} сем.`
 						: undefined
 				}
-				onExportIndicatorsTableExcelClick={() => downloadIndicatorsTableExcel(currentDirection)}
+				currentDirectionId={currentDirection ? currentDirection.id : null}
 			/>
 
 			<div className={mainContent['main-content']}>
@@ -427,23 +430,30 @@ const Home = () => {
 						{currentDirection && (
 							<div
 								style={{
-									marginTop: 24,
-									width: '100%',
-									padding: 24,
-									background: '#ffffff',
-									boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-									overflowX: 'auto',
+								marginTop: 24,
+								width: '100%',
+								padding: 24,
+								background: '#ffffff',
+								boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+								overflowX: 'auto',
 								}}
 							>
 								<CalendarPlansTable
 									educationalPlanId={currentDirection.id}
+									semesters={currentDirection.semesters}
 									onBeforeCreate={checkNonActualDepartments}
 								/>
 							</div>
 						)}
 
 						{showCompetenceMatrix && currentDirection && (
-							<CompetenceMatrix rows={rows} readOnly={false} />
+							<CompetenceMatrix educationalPlanId={currentDirection.id} 
+							                  rows={rows}
+											  readOnly={false} />
+						)}
+
+						{currentDirection && (
+						  	<IndicatorsTable educationalPlanId={currentDirection.id}/>
 						)}
 					</main>
 				</div>

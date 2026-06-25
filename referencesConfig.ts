@@ -84,7 +84,10 @@ const REFERENCES_CONFIG: ReferenceConfig[] = [
 		name: 'control-type',
 		path: '/control-types',
 		displayName: 'Виды контроля',
-		fields: [{ key: 'name', label: 'Название' }],
+		fields: [
+			{ key: 'name', label: 'Название' },
+			{ key: 'is_primary', label: 'Основной', type: 'checkbox' }
+		],
 	},
 	{
 		name: 'indicator',

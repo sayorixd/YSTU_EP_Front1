@@ -102,11 +102,7 @@ export const useSaveMap = () => {
 					practice_hours: discipline.practicalHours,
 					lab_hours: discipline.labHours,
 					semester_number: semesterIndex + 1,
-					has_course_project: discipline.hasCourseProject || false,
-					has_course_work: discipline.hasCourseWork || false,
-					has_rz: discipline.hasRZ ?? discipline.hasCourseRZ ?? false,
-					has_rgr: discipline.hasRGR ?? discipline.hasCourseRGR ?? false,
-					has_referat: discipline.hasReferat ?? discipline.hasCourseReferat ?? false,
+					secondary_control_type_ids: discipline.secondaryControlTypeIds || [],
 					competencies: discipline.competenceCodes?.map(id => ({ id })) || [],
 				})
 			})

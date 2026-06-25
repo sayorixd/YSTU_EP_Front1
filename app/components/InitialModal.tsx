@@ -14,8 +14,10 @@ import {
 interface Direction {
 	id: number
 	name: string
-	educational_level_id?: number // Добавляем
-	educational_form_id?: number // Добавляем
+	code: string
+	profile: string
+	educational_level_id?: number
+	educational_form_id?: number
 	semester_count: number
 }
 
@@ -38,6 +40,8 @@ export const InitialModal = ({
 	const [mode, setMode] = useState<'open' | 'create'>('open')
 	const [formData, setFormData] = useState({
 		name: '',
+		code: '',
+		profile: '',
 		educational_level_id: '',
 		educational_form_id: '',
 		semester_count: 8,
@@ -85,6 +89,8 @@ export const InitialModal = ({
 					directionData: {
 						id: selectedDirection.id,
 						name: selectedDirection.name,
+						code: selectedDirection.code,
+						profile: selectedDirection.profile,
 						level:
 							educationalLevels.find(
 								l => l.id === selectedDirection.educational_level_id
@@ -112,6 +118,14 @@ export const InitialModal = ({
 			setError('Название направления обязательно')
 			return
 		}
+		if (!formData.code.trim()) {
+			setError('Код направления обязателен')
+			return
+		}
+		if (!formData.profile.trim()) {
+			setError('Профиль направления обязателен')
+			return
+		}
 		if (!formData.educational_level_id) {
 			setError('Уровень образования обязателен')
 			return
@@ -134,6 +148,8 @@ export const InitialModal = ({
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					name: formData.name.trim(),
+					code: formData.code.trim(),
+					profile: formData.profile.trim(),
 					educational_level_id: Number(formData.educational_level_id),
 					educational_form_id: Number(formData.educational_form_id),
 					semester_count: Number(formData.semester_count),
@@ -158,6 +174,8 @@ export const InitialModal = ({
 				setMode('open')
 				setFormData({
 					name: '',
+					code: '',
+					profile: '',
 					educational_level_id: '',
 					educational_form_id: '',
 					semester_count: 8,
@@ -253,6 +271,12 @@ export const InitialModal = ({
 											<strong>Название:</strong> {selectedDirection.name}
 										</p>
 										<p>
+											<strong>Код:</strong> {selectedDirection.code}
+										</p>
+										<p>
+											<strong>Профиль:</strong> {selectedDirection.profile}
+										</p>
+										<p>
 											<strong>Уровень образования:</strong>{' '}
 											{selectedDirection?.educational_level_id
 												? educationalLevels.find(
@@ -298,6 +322,26 @@ export const InitialModal = ({
 									value={formData.name}
 									onChange={handleInputChange}
 									placeholder='Введите название направления'
+								/>
+							</div>
+							<div className={modalContent.formGroup}>
+								<label>Код:</label>
+								<input
+									type='text'
+									name='code'
+									value={formData.code}
+									onChange={handleInputChange}
+									placeholder='Введите код направления'
+								/>
+							</div>
+							<div className={modalContent.formGroup}>
+								<label>Профиль:</label>
+								<input
+									type='text'
+									name='profile'
+									value={formData.profile}
+									onChange={handleInputChange}
+									placeholder='Введите профиль направления'
 								/>
 							</div>
 							<div className={modalContent.formGroup}>

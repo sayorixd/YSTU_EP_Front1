@@ -14,6 +14,7 @@ interface AttributesPanelProps {
 interface ControlType {
 	id: number
 	name: string
+	is_primary: boolean
 }
 
 export const AttributesPanel = ({
@@ -26,6 +27,8 @@ export const AttributesPanel = ({
 	const [isResizing, setIsResizing] = useState(false)
 	const [panelWidth, setPanelWidth] = useState(300)
 	const [controlTypes, setControlTypes] = useState<ControlType[]>([])
+	const primaryControlTypes = controlTypes.filter(t => t.is_primary);
+	const secondaryControlTypes = controlTypes.filter(t => !t.is_primary);
 	const [loadingControlTypes, setLoadingControlTypes] = useState(false)
 	const [creditsError, setCreditsError] = useState<string | null>(null)
 	const [showCompetenciesModal, setShowCompetenciesModal] = useState(false)
@@ -200,96 +203,46 @@ export const AttributesPanel = ({
 				</button>
 			</div>
 
-			<label>Вид контроля</label>
-
-            <select
-                value={selectedDiscipline?.controlTypeId ?? ''}
-                onChange={e => {
-                    const id = Number(e.target.value)
-
-                    handleAttributeChange('controlTypeId', id)
-
-                    const type = controlTypes.find(t => t.id === id)
-
-                    handleAttributeChange(
-                        'examType',
-                        getShortExamType(type?.name || '')
-                    )
-                }}
-            >
-                <option value=''>Выберите вид контроля</option>
-
-                {controlTypes.map(type => (
-                    <option key={type.id} value={type.id}>
-                        {type.name}
-                    </option>
-                ))}
-            </select>
-
-			<label>Курсовой проект</label>
+			<label>Основной вид контроля</label>
 			<select
-				value={selectedDiscipline?.hasCourseProject ? 'Да' : 'Нет'}
+				value={selectedDiscipline?.controlTypeId ?? ''}
 				onChange={e => {
-					const hasCourseProject = e.target.value === 'Да'
-					handleAttributeChange('hasCourseProject', hasCourseProject)
+					const id = Number(e.target.value);
+					handleAttributeChange('controlTypeId', id);
+					const type = controlTypes.find(t => t.id === id);
+					handleAttributeChange('examType', getShortExamType(type?.name || ''));
 				}}
 				disabled={!selectedDiscipline}
 			>
-				<option value='Нет'>Нет</option>
-				<option value='Да'>Да</option>
+				<option value=''>Выберите вид контроля</option>
+				{primaryControlTypes.map(type => (
+					<option key={type.id} value={type.id}>{type.name}</option>
+				))}
 			</select>
 
-			<label>Курсовая работа</label>
-			<select
-				value={selectedDiscipline?.hasCourseWork ? 'Да' : 'Нет'}
-				onChange={e => {
-					const hasCourseWork = e.target.value === 'Да'
-					handleAttributeChange('hasCourseWork', hasCourseWork)
-				}}
-				disabled={!selectedDiscipline}
-			>
-				<option value='Нет'>Нет</option>
-				<option value='Да'>Да</option>
-			</select>
-
-			<label>РЗ</label>
-			<select
-				value={selectedDiscipline?.hasRZ ? 'Да' : 'Нет'}
-				onChange={e => {
-					const hasRZ = e.target.value === 'Да'
-					handleAttributeChange('hasRZ', hasRZ)
-				}}
-				disabled={!selectedDiscipline}
-			>
-				<option value='Нет'>Нет</option>
-				<option value='Да'>Да</option>
-			</select>
-
-			<label>РГР</label>
-			<select
-				value={selectedDiscipline?.hasRGR ? 'Да' : 'Нет'}
-				onChange={e => {
-					const hasRGR = e.target.value === 'Да'
-					handleAttributeChange('hasRGR', hasRGR)
-				}}
-				disabled={!selectedDiscipline}
-			>
-				<option value='Нет'>Нет</option>
-				<option value='Да'>Да</option>
-			</select>
-
-			<label>Реферат</label>
-			<select
-				value={selectedDiscipline?.hasReferat ? 'Да' : 'Нет'}
-				onChange={e => {
-					const hasReferat = e.target.value === 'Да'
-					handleAttributeChange('hasReferat', hasReferat)
-				}}
-				disabled={!selectedDiscipline}
-			>
-				<option value='Нет'>Нет</option>
-				<option value='Да'>Да</option>
-			</select>
+			{secondaryControlTypes.map(type => {
+				const isChecked = selectedDiscipline?.secondaryControlTypeIds?.includes(type.id) || false;
+				return (
+					<React.Fragment key={type.id}>
+						<label>{type.name}</label>
+						<select
+							value={isChecked ? 'Да' : 'Нет'}
+							onChange={e => {
+								const isChecked = e.target.value === 'Да';
+								const currentIds = selectedDiscipline?.secondaryControlTypeIds || [];
+								const newIds = isChecked
+									? [...currentIds, type.id]
+									: currentIds.filter(id => id !== type.id);
+								handleAttributeChange('secondaryControlTypeIds', newIds);
+							}}
+							disabled={!selectedDiscipline}
+						>
+							<option value='Нет'>Нет</option>
+							<option value='Да'>Да</option>
+						</select>
+					</React.Fragment>
+				);
+			})}
 
 			<label>Часы лекционные</label>
 			<input
